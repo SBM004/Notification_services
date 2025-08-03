@@ -1,6 +1,13 @@
 import express from 'express'
-import router from 'express.Router()'
-import UserModel from '../models/user.model.js';
 
-router.get('/users',UserModel.find());
-router.get('/user?email={email}')
+// import UserModel from '../models/user.model.js';
+import UserController from '../controllers/user.controllers.js';
+import awaitHandlerFactory from '../middleware/awaitHandlerFactory.middleware.js';
+const router=express.Router();
+router.post('/login',awaitHandlerFactory(UserController.loginUser));
+router.get('/users',awaitHandlerFactory(UserController.find));
+// router.get('/user')
+router.post('/users',awaitHandlerFactory(UserController.registerUser));
+
+
+export default router;

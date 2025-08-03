@@ -18,8 +18,18 @@ class NotificationModel{
 
     
     async create(params){
-        const q=''
+        const q=`INSERT INTO ${this.table} VALUES ($1,$2,$3,$4) RETURNING *`;
+        try{
+            const result=pool.query(q,[params.notification_id,params.type_id,params.message,params.title]);
+            return result;
+
+        }
+        catch(err){
+            console.log(err);
+            throw err;
+        }
     }
+
     async delete(){
         const q='DELETE FROM notifications';
         try{
