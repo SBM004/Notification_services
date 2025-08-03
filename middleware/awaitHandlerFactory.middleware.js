@@ -1,11 +1,11 @@
-const awaitHandlerFactory = (func) => {
+const awaitHandlerFactory = (middleware) => {
     return async (req, res, next) => {
         try {
-          await func(req, res)
-            // res.send({result});
-                } catch (err) {
+            await middleware(req, res)
+            
+        } catch (err) {
             next(err)
-        }
+        } 
     }
 }
 
