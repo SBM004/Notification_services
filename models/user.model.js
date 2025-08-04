@@ -58,6 +58,30 @@ class UserModel{
             throw err;
         }
     }
+    async findUserByEmail(params){
+        const q='SELECT * FROM users WHERE email=$1';   
+        try{
+            const result=await pool.query(q,[params.email]);
+            console.log(result.rows);
+            return result.rows;
+        }
+        catch(err){
+            console.log(err);
+            throw err;
+        }
+    }
+    async findUserById(params){
+        const q='SELECT * FROM users WHERE user_id=$1';   
+        try{
+            const result=await pool.query(q,[params.user_id]);
+            console.log(result.rows);
+            return result.rows;
+        }
+        catch(err){
+            console.log(err);
+            throw err;
+        }
+    }
 
    
 }

@@ -3,7 +3,7 @@ import pool from '../db/db.connection.js';
 
 
 class NotificationModel{
-    table='notifications';
+    table='notification';
     
     async find(){
         const q = 'SELECT * FROM notifications';
@@ -21,7 +21,7 @@ class NotificationModel{
         const q=`INSERT INTO ${this.table} VALUES ($1,$2,$3,$4) RETURNING *`;
         try{
             const result=pool.query(q,[params.notification_id,params.type_id,params.message,params.title]);
-            return result;
+            return result.rows;
 
         }
         catch(err){
@@ -44,7 +44,7 @@ class NotificationModel{
     }
 
     async deleteById(params){
-        const q='DELETE FROM notifications WHERE id=$1';
+        const q='DELETE FROM notifications WHERE notification_id=$1';
         try{
             const result=await pool.query(q, [params.id]);
             return result;
@@ -56,3 +56,6 @@ class NotificationModel{
     }
 
 }
+
+
+export default new NotificationModel();

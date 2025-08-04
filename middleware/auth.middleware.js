@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import pool from '../db';
-import UserModel from '../models/user.model.js';
-import HttpException from '../utils/HttpException.utils.js'
+// import pool from '../db';
+import userModel from '../models/user.model.js';
+import {HttpException} from '../utils/HttpException.utils.js'
 dotenv.config();
 
 const auth = (...roles) => {
@@ -20,9 +20,9 @@ const auth = (...roles) => {
             // Verify Token
             const decoded = jwt.verify(token, secretKey);
             const {user_id}= decoded;
-
-            const result = await pool.query('SELECT * FROM users WHERE user_id=$1',[user_id]);
-            const user = result.rows[0];
+            console.log(decoded);
+            const result = await userModel.findUserById({user_id})
+            const user = result[0];
 
             if (!user) {
                 throw new HttpException(401, 'Authentication failed! User Not Found');
