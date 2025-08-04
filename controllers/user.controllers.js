@@ -9,12 +9,18 @@ class UserController{
         const {email,password}=req.body;
         try{
           const result=await UserModel.findUserByEmail({email});
-          console.log("in loginUser")
+        //   console.log("in loginUser")
           if(result.length>0){
-            const isMatched=await bcrypt.compare(password.trim(),result[0].password)
+            const isMatched=await bcrypt.compare(password,result[0].password)
             if(isMatched){
                 const token=jwt.sign({"userId":result.id,"email":email},process.env.SECRET_KEY,{expiresIn:'1h'});
-                res.status(200).json({message:'Login successful',token:token,user:result});
+                res.cookie('token', token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'Strict',
+                maxAge: 3600000
+                });
+                res.status(200).json({message:'Login successful',user:result});
             }
             else{
                 res.status(401).json({message:'Invalid password'});

@@ -17,10 +17,10 @@ class NotificationTypeModel {
     }
 
     async create(params){
-        const pool=`INSERT INTO ${this.table} VALUES {$1,$2,$3};`
+        const q=`INSERT INTO ${this.table} VALUES ($1,$2,$3)`;
         try{
-            const result=pool.query(q,[params.type_id,params.type,params.carrier]);
-            return result;
+            const result=await pool.query(q,[params.type_id,params.type,params.carrier]);
+            return result.rows;
 
         }
         catch(err){
@@ -31,10 +31,10 @@ class NotificationTypeModel {
     }
 
     async findByTypeCarrier(params){
-        const q=`SELETC * FROM ${this.table} WHERE type=$1 AND carrier=$2`;
+        const q=`SELECT * FROM ${this.table} WHERE type=$1 AND carrier=$2`;
         try{
             const result=await  pool.query(q,[params.type,params.carrier]);
-            return result;
+            return result.rows
         }
         catch(err){
             comsole.log(err);
@@ -43,3 +43,5 @@ class NotificationTypeModel {
     }
 
 }
+
+export default new NotificationTypeModel();
