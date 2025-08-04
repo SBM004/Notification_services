@@ -1,22 +1,21 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import pool from '../db';
-import UserModel from '..models/user.model.js';
+import UserModel from '../models/user.model.js';
 import HttpException from '../utils/HttpException.utils.js'
 dotenv.config();
 
 const auth = (...roles) => {
     return async function (req, res, next) {
         try {
-            const authHeader = req.headers.authorization;
-            const bearer = 'Bearer ';
+           const token =req.cookies.token;
 
-            if (!authHeader || !authHeader.startsWith(bearer)) {
-                throw new HttpException(401, 'Access denied. No credentials sent!');
+            if (!token) {
+                throw new HttpException(401, 'Access denied. No token found in cookies!');
             }
 
-            const token = authHeader.replace(bearer, '');
-            const secretKey = process.env.SECRET_JWT;
+            
+            const secretKey = process.env.SECRET_KEY;
 
             // Verify Token
             const decoded = jwt.verify(token, secretKey);
