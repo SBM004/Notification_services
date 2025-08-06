@@ -98,15 +98,142 @@ import {HttpException} from '../utils/HttpException.utils.js';
 import { sendToKafka } from '../kafkaqueue/producer.js';
 import {v4 as uuidv4} from 'uuid'
 
+
 class SentController{
     
-    async createSentNotification(req,res){
-        try{
-            const carrier = req.body.carrier.toLowerCase();
+    // async createSentNotification(req,res){
+    //     const body=req.body;
+    //     try{
+    //         if(Array.isArray(body) &&)
+    //         const carrier = req.body.carrier.toLowerCase();
             
-            if (carrier === 'sms') {
-                console.log("sent_controller");
-                const sid=uuidv4();
+    //         if (carrier === 'sms') {
+    //             console.log("sent_controller");
+    //             const sid=uuidv4();
+    //             const payload = {
+    //                 sent_to: req.body.to,
+    //                 message: req.body.message,
+    //                 title: req.body.title,
+    //                 type: req.body.type,
+    //                 carrier,
+    //                 user_id: req.currentUser.user_id,
+    //                 sent_at: new Date().toISOString(),
+    //                 sid:sid
+    //             };
+                
+    //             try {
+    //                 // Send to Kafka
+    //                 await sendToKafka(payload);
+                    
+    //                 // // Only respond with success if Kafka send was successful
+    //                 // const result=SentNotific.findBySID({sid});
+    //                 // if(result.status=='failed'){
+    //                 //     res.status(500).json({
+    //                 //      message:"notification not sent",
+    //                 //      success:false
+    //                 // });
+    //                 // }
+    //                 // else if(result.status==='sent'){
+    //                 //      res.status(200).json({
+    //                 //      message:"notification not sent",
+    //                 //      success:true})
+    //                 // }
+
+    //                 // res.status(200).json({
+    //                 //     // SentNotific
+    //                 // });
+    //                  res.status(200).json({
+    //                     message: "Notification queued successfully",
+    //                     success: true,
+    //                     sid: sid,
+    //                     status: "queued"
+    //                 });
+    //             } catch (kafkaError) {
+    //                 console.error("Kafka error:", kafkaError);
+    //                 // Return error if Kafka fails
+    //                 res.status(500).json({
+    //                     message: "Failed to queue notification",
+    //                     success: false,
+    //                     error: kafkaError.message
+    //                 });
+    //             }
+               
+                
+    //         } else {
+    //             throw new HttpException(400, "Unsupported carrier");
+    //         }
+            
+    //     } 
+    //     catch(err) {
+    //         console.log(err);
+    //         // Make sure we haven't already sent a response
+    //         if (!res.headersSent) {
+    //             res.status(err.status || 500).json({
+    //                 message: err.message || "Internal server error",
+    //                 success: false
+    //             });
+    //         }
+    //     }
+    // }
+
+    async createSentNotification(req, res) {
+    const body = req.body;
+    try {
+        const carrier = req.body.carrier.toLowerCase();
+        
+        if (carrier === 'sms') {
+            console.log("sent_controller");
+            
+            // Check if it's bulk sending (array of recipients)
+            if (Array.isArray(body.to)) {
+                // Handle multiple users
+                const results = [];
+                const errors = [];
+                
+                for (const recipient of body.to) {
+                    const sid = uuidv4();
+                    const payload = {
+                        sent_to: recipient, // Individual phone number
+                        message: req.body.message,
+                        title: req.body.title,
+                        type: req.body.type,
+                        carrier,
+                        user_id: req.currentUser.user_id,
+                        sent_at: new Date().toISOString(),
+                        sid: sid
+                    };
+                    
+                    try {
+                        await sendToKafka(payload);
+                        results.push({
+                            recipient: recipient,
+                            sid: sid,
+                            status: "queued",
+                            success: true
+                        });
+                    } catch (kafkaError) {
+                        console.error(`Kafka error for ${recipient}:`, kafkaError);
+                        errors.push({
+                            recipient: recipient,
+                            error: kafkaError.message,
+                            success: false
+                        });
+                    }
+                }
+                
+                // Return bulk response
+                res.status(200).json({
+                    message: `Bulk notifications processed: ${results.length} queued, ${errors.length} failed`,
+                    success: errors.length === 0, // Only true if all succeeded
+                    total_sent: results.length,
+                    total_failed: errors.length,
+                    results: results,
+                    errors: errors
+                });
+                
+            } else {
+                // Handle single user (your existing code)
+                const sid = uuidv4();
                 const payload = {
                     sent_to: req.body.to,
                     message: req.body.message,
@@ -115,31 +242,12 @@ class SentController{
                     carrier,
                     user_id: req.currentUser.user_id,
                     sent_at: new Date().toISOString(),
-                    sid:sid
+                    sid: sid
                 };
                 
                 try {
-                    // Send to Kafka
                     await sendToKafka(payload);
-                    
-                    // // Only respond with success if Kafka send was successful
-                    // const result=SentNotific.findBySID({sid});
-                    // if(result.status=='failed'){
-                    //     res.status(500).json({
-                    //      message:"notification not sent",
-                    //      success:false
-                    // });
-                    // }
-                    // else if(result.status==='sent'){
-                    //      res.status(200).json({
-                    //      message:"notification not sent",
-                    //      success:true})
-                    // }
-
-                    // res.status(200).json({
-                    //     // SentNotific
-                    // });
-                     res.status(200).json({
+                    res.status(200).json({
                         message: "Notification queued successfully",
                         success: true,
                         sid: sid,
@@ -147,30 +255,28 @@ class SentController{
                     });
                 } catch (kafkaError) {
                     console.error("Kafka error:", kafkaError);
-                    // Return error if Kafka fails
                     res.status(500).json({
                         message: "Failed to queue notification",
                         success: false,
                         error: kafkaError.message
                     });
                 }
-               
-                
-            } else {
-                throw new HttpException(400, "Unsupported carrier");
             }
             
-        } catch(err) {
-            console.log(err);
-            // Make sure we haven't already sent a response
-            if (!res.headersSent) {
-                res.status(err.status || 500).json({
-                    message: err.message || "Internal server error",
-                    success: false
-                });
-            }
+        } else {
+            throw new HttpException(400, "Unsupported carrier");
+        }
+        
+    } catch(err) {
+        console.log(err);
+        if (!res.headersSent) {
+            res.status(err.status || 500).json({
+                message: err.message || "Internal server error",
+                success: false
+            });
         }
     }
+}
 
      async getNotificationStatus(req, res) {
         try {
