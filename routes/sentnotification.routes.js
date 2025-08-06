@@ -6,5 +6,5 @@ const router=express.Router();
 
 router.post('/send',auth('admin','editor'),awaitHandler(Sc.createSentNotification));
 
-
+router.get('/send',auth('admin','editor','viewer'),awaitHandler(Sc.find))
 export default router;

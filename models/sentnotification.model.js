@@ -21,7 +21,7 @@ class SentNotificationModel{
         try {
             const result = await pool.query(q);
             return result.rows;
-        } catch (err) {2
+        } catch (err) {
             console.log(err);
             throw err;
         }
@@ -34,7 +34,8 @@ class SentNotificationModel{
     async findByUserId(params){
         const q=`SELECT * FROM ${this.table} WHERE user_id=$1`;
         try{
-            const result=await pool.query(q.params.userId);
+            console.log("user_id:"+params.user_id)
+            const result=await pool.query(q,[params.user_id]);
             return result.rows;
         }
         catch(err){
@@ -43,7 +44,7 @@ class SentNotificationModel{
         }
     }
     
-    async findBySId(params){
+    async findBySID(params){
         const q=`SELECT * FROM ${this.table} WHERE sid=$1`;
         try{
             const result=await pool.query(q,[params.sid]);
@@ -73,6 +74,29 @@ class SentNotificationModel{
         const q=`DELETE FROM ${this.table} WHERE sid=$1`;
         try{
             const result=await pool.query(q, [params.sid]);
+            return result;
+        }
+        catch(err){
+            console.log(err);
+            throw err;
+        }
+    }
+
+    async UpdateStatus(params){
+         const q=`UPDATE ${this.table} SET delivery_status=$2 WHERE sid=$1 `;
+        try{
+            const result=await pool.query(q, [params.sid,params.status]);
+            return result;
+        }
+        catch(err){
+            console.log(err);
+            throw err;
+        }
+    }
+    async UpdateStatusAndId(params){
+         const q=`UPDATE ${this.table} SET delivery_status=$2,carriersid=$3 WHERE sid=$1 `;
+        try{
+            const result=await pool.query(q, [params.sid,params.status,params.carriersid]);
             return result;
         }
         catch(err){

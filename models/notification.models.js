@@ -55,6 +55,18 @@ class NotificationModel{
         }
     }
 
+    async UpdateId(params){
+         const q=`UPDATE ${this.table} SET notification_id=$ WHERE notification_id=$1 `;
+        try{
+            const result=await pool.query(q, [params.notification_id,params.twiliosid]);
+            return result;
+        }
+        catch(err){
+            console.log(err);
+            throw err;
+        }
+    }
+
 }
 
 
