@@ -1,7 +1,9 @@
 import nodemailer from 'nodemailer'
-require('dotenv').config();
+import dotenv from 'dotenv'
 
-const transporter = nodemailer.createTransporter({
+dotenv.config()
+
+const transporter = nodemailer.createTransport({
   host: 'smtp.sendgrid.net',
   port: 587,
   secure: false,
@@ -11,4 +13,4 @@ const transporter = nodemailer.createTransporter({
   }
 });
 
-module.exports = transporter;
+export default transporter;

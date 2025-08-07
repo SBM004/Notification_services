@@ -212,6 +212,7 @@ import NotificationModel from '../models/notification.models.js';
 import SentNotific from '../models/sentnotification.model.js';
 import NotificationTypeModel from '../models/notification_type.model.js';
 import { v4 as uuidv4 } from 'uuid';
+import {EmailService} from '../services/email.service.js'
 
 const kafka = new Kafka({
     clientId: 'notification-app',
@@ -345,15 +346,15 @@ async function processNotification(payload) {
         else{
 
             const info=await EmailService(payload);
-
+           
             await SentNotific.UpdateStatusAndId({
                 sid: payload.sid, 
                 status: 'sent',
-                carriersid: twilioSid,
+                carriersid: info.messageId,
                 read_at:null
             });
     
-            console.log(` email sent and stored. SID: ${payload.sid}, Twilio SID: ${info.message_id} status: ${info.event}`);
+            console.log(` email sent and stored. SID: ${payload.sid}, email message SID: ${info.messageId} status: ${info.accepted} ${info.response}`);
 
             
 

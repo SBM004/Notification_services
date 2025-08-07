@@ -1,13 +1,17 @@
 import transporter from '../services/emailTransporter.js'
 import dotenv from 'dotenv';
 dotenv.config();
-
+//implemented using nodemailer so that different third party can be used with this template
 import { HttpException } from '../utils/HttpException.utils.js';
+import SentNotific from '../models/sentnotification.model.js'
+
+//This email goes in spam as domain is not verified
 
 export const EmailService = async ( payload ) => {
     try {
         // Validate payload
-        if (!payload.message || !payload.subject || !payload.sent_to) {
+        //here title is subject
+        if (!payload.message || !payload.title || !payload.sent_to) {
             throw new HttpException(400, "Missing subject, message, or sent_to in payload");
         }
 
@@ -19,8 +23,9 @@ export const EmailService = async ( payload ) => {
          const info = await transporter.sendMail({
             from: process.env.FROM_EMAIL,
             to: payload.sent_to,
-            subject: payload.message,
-            // html: '<h1>Hello World!</h1>'
+            subject:payload.type,
+            text: payload.message,
+            //  html: '<h1>Hello World!</h1>'
             });
 
         console.log("Sending Email to:", info.rejected>0?'failed':'sent');
@@ -28,16 +33,16 @@ export const EmailService = async ( payload ) => {
         
 
     } catch (error) {
-        if (error.response) {
-            console.error("SendGrid Error Response:", error.response.body);
-            throw new HttpException(400, `SendGrid Error: ${error.response.body.errors[0].message}`);
+        if (error) {
+            console.error("SendGrid Error Response:", error.response);
+            throw new HttpException(400, `SendGrid Error: ${error.response}`);
         }
 
         if (error instanceof HttpException) {
             throw error;
         }
 
-        throw new HttpException(500, `Email sending failed: ${error.message}`);
+        throw new HttpException(500, `Email sending failed: ${error.response}`);
     }
 };
 
