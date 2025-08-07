@@ -23,8 +23,8 @@ export const EmailService = async ( payload ) => {
             // html: '<h1>Hello World!</h1>'
             });
 
-        // console.log("Sending Email to:", payload.sent_to);
-
+        console.log("Sending Email to:", info.rejected>0?'failed':'sent');
+            return info;
         
 
     } catch (error) {

@@ -29,7 +29,7 @@ emailWebhookRouter.post('/email-status', async (req, res) => {
         else if (event === 'bounce' || event === 'dropped') status = 'failed';
         else if (event === 'open') status = 'opened';
 
-        await SentNotific.UpdateStatus({
+        await SentNotific.UpdateStatusAndId({
           sid: notification.sid,
           status: status,
           carrier_status: sg_message_id,

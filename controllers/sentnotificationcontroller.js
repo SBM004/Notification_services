@@ -181,7 +181,7 @@ class SentController{
     try {
         const carrier = req.body.carrier.toLowerCase();
         
-        if (carrier === 'sms') {
+        if (carrier === 'sms' || carrier==='email') {
             console.log("sent_controller");
             
             // Check if it's bulk sending (array of recipients)
@@ -262,6 +262,7 @@ class SentController{
                     });
                 }
             }
+           
             
         } else {
             throw new HttpException(400, "Unsupported carrier");

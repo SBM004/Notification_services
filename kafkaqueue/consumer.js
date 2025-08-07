@@ -344,6 +344,16 @@ async function processNotification(payload) {
         }
         else{
 
+            const info=await EmailService(payload);
+
+            await SentNotific.UpdateStatusAndId({
+                sid: payload.sid, 
+                status: 'sent',
+                carriersid: twilioSid,
+                read_at:null
+            });
+    
+            console.log(` email sent and stored. SID: ${payload.sid}, Twilio SID: ${info.message_id} status: ${info.event}`);
 
             
 
