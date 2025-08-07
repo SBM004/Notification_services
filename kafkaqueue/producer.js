@@ -89,7 +89,7 @@ export const initProducer = async () => {
 // Send message to Kafka
 export const sendToKafka = async (data) => {
   await kafkaProducer.send({
-    topic: 'twilio-sms-notifications',
+    topic: 'notifications',
     messages: [{ value: JSON.stringify(data) }],
   });
 };

@@ -218,11 +218,11 @@ const kafka = new Kafka({
     brokers: [process.env.KAFKA_BROKER]
 });
 
-const consumer = kafka.consumer({ groupId: 'twilio-sms-group' });
+const consumer = kafka.consumer({ groupId: 'notification-group' });
 
 export const startConsumer = async () => {
     await consumer.connect();
-    await consumer.subscribe({ topic: 'twilio-sms-notifications', fromBeginning: false });
+    await consumer.subscribe({ topic: 'notifications', fromBeginning: false });
 
     await consumer.run({
         eachMessage: async ({ topic, partition, message }) => {
@@ -256,7 +256,7 @@ export const startConsumer = async () => {
                         console.log(` Retrying failed/queued notification: ${payload.sid}`);
                         // Continue with processing
                     }
-                     await processSMSNotification(payload);
+                     await processNotification(payload);
                 } else {
                     // New notification - create database records first
                     await createNotificationRecords(payload);
@@ -311,7 +311,7 @@ async function createNotificationRecords(payload) {
             sent_to: payload.sent_to,
             status: 'queued'
         });
-         await processSMSNotification(payload);
+         await processNotification(payload);
         console.log("Database records created with 'queued' status");
         
     } catch (createError) {
@@ -324,22 +324,34 @@ async function createNotificationRecords(payload) {
     }
 }
 
-async function processSMSNotification(payload) {
+async function processNotification(payload) {
     try {
-        console.log(" Sending SMS via Twilio...");
-        const twilioSid = await SMSservice({ payload });
-        
-        // Update status to 'sent' with Twilio SID
-        await SentNotific.UpdateStatusAndId({
-            sid: payload.sid, 
-            status: 'sent',
-            carriersid: twilioSid
-        });
+        console.log(" Sending message...");
+        if(payload.carrier==='sms'){
 
-        console.log(` SMS sent and stored successfully. SID: ${payload.sid}, Twilio SID: ${twilioSid}`);
+            const twilioSid = await SMSservice({ payload });
+            
+            // Update status to 'sent' with Twilio SID
+    
+            await SentNotific.UpdateStatusAndId({
+                sid: payload.sid, 
+                status: 'sent',
+                carriersid: twilioSid,
+                read_at:null
+            });
+    
+            console.log(` SMS sent and stored successfully. SID: ${payload.sid}, Twilio SID: ${twilioSid}`);
+        }
+        else{
+
+
+            
+
+        }
         
-    } catch (smsError) {
-        console.error(" Error sending SMS:", smsError);
+        
+    } catch (messageError) {
+        console.error(" Error sending SMS:", messageError);
         
         // Update status to 'failed'
         await SentNotific.UpdateStatus({
@@ -347,7 +359,7 @@ async function processSMSNotification(payload) {
             status: 'failed',
         });
         
-        throw smsError; // Re-throw to be handled by main error handler
+        throw messageError; // Re-throw to be handled by main error handler
     }
 }
 

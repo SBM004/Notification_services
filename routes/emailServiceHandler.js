@@ -10,33 +10,31 @@ emailWebhookRouter.post('/email-status', async (req, res) => {
     const events = req.body; // Array of event objects
 
     for (const event of events) {
-      const {
-        sg_message_id,
-        email,
-        event: sgEvent,
-        timestamp,
-        smtp_id,
-        reason
-      } = event;
-
+    
+       const sg_message_id=event.sg_message_id
+       const email=event.email
+       const event=event.event
+       const timestamp=event.timestamp
+       const smtp_id=event.smtp_id
+       const reason=event.reason
       console.log('SendGrid webhook event:', event);
 
       // Find using carrierSID or email or any custom arg you passed in message
-      const notification = await SentNotific.findByCarrierSID({ carrierSID: smtp_id });
+      const notification = await SentNotific.findByCarrierSID({ carrierSID: sg_message_id });
 
       if (notification) {
         // Map SendGrid event to internal status
         let status = 'sent';
-        if (sgEvent === 'delivered') status = 'delivered';
-        else if (sgEvent === 'bounce' || sgEvent === 'dropped') status = 'failed';
-        else if (sgEvent === 'open') status = 'opened';
+        if (event === 'delivered') status = 'delivered';
+        else if (event === 'bounce' || event === 'dropped') status = 'failed';
+        else if (event === 'open') status = 'opened';
 
         await SentNotific.UpdateStatus({
           sid: notification.sid,
           status: status,
-          carrier_status: sgEvent,
-          error_message: reason || null,
-          updated_at: new Date(timestamp * 1000).toISOString()
+          carrier_status: sg_message_id,
+          carrier:'email',
+          is_read: event==='open'?new Date(timestamp * 1000).toISOString() : null
         });
 
         console.log(`Email status updated for ${notification.sid}`);

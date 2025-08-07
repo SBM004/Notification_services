@@ -94,9 +94,10 @@ class SentNotificationModel{
         }
     }
     async UpdateStatusAndId(params){
-         const q=`UPDATE ${this.table} SET delivery_status=$2,carriersid=$3 WHERE sid=$1 `;
+         const q=`UPDATE ${this.table} SET delivery_status=$2,carriersid=$3,read_at=$4  WHERE sid=$1 `;
         try{
-            const result=await pool.query(q, [params.sid,params.status,params.carriersid]);
+            
+            const result=await pool.query(q, [params.sid,params.status,params.carriersid,params.read_at]);
             return result;
         }
         catch(err){
