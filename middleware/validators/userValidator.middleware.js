@@ -1,7 +1,7 @@
 import {body} from 'express-validator';
-import Role from '../../utils/userRoles.utils.js'
+// import Role from '../../utils/userRoles.utils.js'
 
-const validRoles=[Role.Admin,Role.Editor,Role.Viewer];
+const validRoles=['admin','viewer','editor'];
 
 const validatePasswordConfirmation = (value, {req})=> {
     if(!req.body.confirm_password){

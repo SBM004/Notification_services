@@ -22,18 +22,23 @@ const auth = (...roles) => {
             const {user_id}= decoded;
             console.log(decoded);
             const result = await userModel.findUserById({user_id})
-            const user = result[0];
+            
 
-            if (!user) {
+            if (!result) {
                 throw new HttpException(401, 'Authentication failed! User Not Found');
             }
 
-            const normalizedUserRole = user.role.toLowerCase();
+            const normalizedUserRole = result.role.toLowerCase();
+            console.log("role:",normalizedUserRole)
             const normalizedRoles = roles.map(role => role.toLowerCase());
             // check if the current user is the owner user
-            const ownerAuthorized = req.params.userId && req.params.userId === user.user_id;
-
-            
+            // const ownerAuthorized = req.params.userId && req.params.userId === user.user_id;
+            const ownerAuthorized =
+            (req.params.userId && req.params.userId === result.user_id) ||
+            (req.params.email && req.params.email === result.email);
+            console.log(ownerAuthorized)
+            console.log(normalizedRoles.includes(normalizedUserRole))
+            console.log(normalizedUserRole === 'admin')
             const isAuthorized = ownerAuthorized || normalizedRoles.includes(normalizedUserRole) || normalizedUserRole === 'admin';
 
             if(!isAuthorized){

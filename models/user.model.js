@@ -1,7 +1,9 @@
 import pool from '../db/db.connection.js';
-
+import {multipleColumnSet,multipleColumnSetDetailed} from '../utils/common.utils.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+
+
 class UserModel{
     //getting the user by email
     table='users'
@@ -13,7 +15,7 @@ class UserModel{
             return result;
         }
         catch(err){
-            console.log(err);
+            console.log("create",err);
             throw err;
         }
     }
@@ -32,11 +34,47 @@ class UserModel{
 
     }
     
-    async update(params)
+    // async updateByEmail(body,email)
+    // {
+    //     const {column,values}=multipleColumnSet(body)
+    //     const q=`UPDATE ${this.table} SET ${column} WHERE email=${email} RETURNING *`;
+    //     try{
+    //         const result=await pool.query(q,values);
+    //         return result.rows[0];
+    //     }
+    //     catch(err){
+    //         console.log(err);
+    //         throw err;
+    //     }
+
+    // }
+
+        async updateByEmail(body, email) {
+            const { column, values } = multipleColumnSetDetailed(body);
+            
+            // Add email as a parameter
+            // values.push(email);
+            // const emailParam = values.length;
+            
+            // Use parameter placeholder
+            const q = `UPDATE ${this.table} SET ${column} WHERE email='${email}' RETURNING *`;
+            try{
+
+                const result = await pool.query(q, values);
+                console.log(result.rows[0]);
+                return result.rows[0];
+            }
+            catch(err){
+                console.log('in updateByEmail')
+                throw err;
+            }
+        }
+    async update(body,id)
     {
-        const q=`UPDATE ${this.table} SET email=$1, password=$2, role=$3 WHERE id=$4 RETURNING *`;
+        const {column,values}=multipleColumnSetDetailed(body)
+        const q=`UPDATE ${this.table} SET ${column} WHERE id=${id} RETURNING *`;
         try{
-            const result=await pool.query(q,[params.email, params.password, params.role, params.id]);
+            const result=await pool.query(q,values);
             return result.rows[0];
         }
         catch(err){
@@ -46,24 +84,24 @@ class UserModel{
 
     }
 
+    // async findUserByEmail(params){
+    //     const q='SELECT * FROM users WHERE email=$1';   
+    //     try{
+    //         const result=await pool.query(q,[params.email]);
+    //         console.log(result.rows);
+    //         return result.rows[0];
+    //     }
+    //     catch(err){
+    //         console.log(err);
+    //         throw err;
+    //     }
+    // }
     async findUserByEmail(params){
         const q='SELECT * FROM users WHERE email=$1';   
         try{
             const result=await pool.query(q,[params.email]);
             console.log(result.rows);
-            return result.rows;
-        }
-        catch(err){
-            console.log(err);
-            throw err;
-        }
-    }
-    async findUserByEmail(params){
-        const q='SELECT * FROM users WHERE email=$1';   
-        try{
-            const result=await pool.query(q,[params.email]);
-            console.log(result.rows);
-            return result.rows;
+            return result.rows[0];
         }
         catch(err){
             console.log(err);
@@ -75,7 +113,7 @@ class UserModel{
         try{
             const result=await pool.query(q,[params.user_id]);
             console.log(result.rows);
-            return result.rows;
+            return result.rows[0];
         }
         catch(err){
             console.log(err);
