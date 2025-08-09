@@ -23,7 +23,7 @@ app.use(cors());
 app.use('/user',userRouter);
 app.use('/type',Notificationtype_router);
 app.use('/send',SentRouter)
-app.use('/webhooks',webHookRouter)
+app.use('/webhook',webHookRouter)
 app.use(errorMiddleware);
 //http://localhost:3001/user/login
 

@@ -43,7 +43,33 @@ class SentNotificationModel{
             throw err;
         }
     }
+
+    async findByCarrierSID(params){
+        const q=`SELECT * FROM ${this.table} WHERE carriersid=$1`;
+        try{
+            console.log("user_id:"+params.carrierSID)
+            const result=await pool.query(q,[params.carrierSID]);
+            return result.rows[0];
+        }
+        catch(err){
+            console.log(err);
+            throw err;
+        }
+    }
     
+    async findByMessageId(params){
+        const q=`SELECT * FROM ${this.table} WHERE message_id=$1`;
+        try{
+            // console.log("user_id:"+params.carrierSID)
+            const result=await pool.query(q,[params.message_id]);
+            return result.rows[0];
+        }
+        catch(err){
+            console.log(err);
+            throw err;
+        }
+    }
+
     async findBySID(params){
         const q=`SELECT * FROM ${this.table} WHERE sid=$1`;
         try{
@@ -83,9 +109,9 @@ class SentNotificationModel{
     }
 
     async UpdateStatus(params){
-         const q=`UPDATE ${this.table} SET delivery_status=$2 WHERE sid=$1 `;
+         const q=`UPDATE ${this.table} SET delivery_status=$2,read_datetime=$3,is_read=$4 WHERE message_id=$1 `;
         try{
-            const result=await pool.query(q, [params.sid,params.status]);
+            const result=await pool.query(q, [params.message_id,params.status,params.read_at,params.is_read]);
             return result;
         }
         catch(err){
@@ -94,10 +120,11 @@ class SentNotificationModel{
         }
     }
     async UpdateStatusAndId(params){
-         const q=`UPDATE ${this.table} SET delivery_status=$2,carriersid=$3,read_datetime=$4  WHERE sid=$1 `;
+         const q=`UPDATE ${this.table} SET delivery_status=$2,
+         carriersid=$3,read_datetime=$4,message_id=$5  WHERE sid=$1 `;
         try{
             
-            const result=await pool.query(q, [params.sid,params.status,params.carriersid,params.read_at]);
+            const result=await pool.query(q, [params.sid,params.status,params.carriersid,params.read_at,params.message_id]);
             return result;
         }
         catch(err){
@@ -111,3 +138,4 @@ class SentNotificationModel{
 export default new SentNotificationModel();
 
 
+//ngrok http 3001

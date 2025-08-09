@@ -5,10 +5,11 @@ import SentNotific from '../models/sentnotification.model.js';
 const emailWebhookRouter = express.Router();
 
 // SendGrid Event Webhook
+//http://localhost:3001/webhook/email-status
 emailWebhookRouter.post('/email-status', async (req, res) => {
   try {
     const events = req.body; // Array of event objects
-
+    console.log("webhook of email");
     for (const event of events) {
     
        const sg_message_id=event.sg_message_id

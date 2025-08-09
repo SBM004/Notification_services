@@ -1,5 +1,5 @@
 import pool from '../db/db.connection.js';
-import {multipleColumnSet,multipleColumnSetDetailed} from '../utils/common.utils.js';
+import {multipleColumnSet,multipleColumnSetDetailed,multipleColumncommon} from '../utils/common.utils.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -9,9 +9,10 @@ class UserModel{
     table='users'
 
     async create(params){
-        const q=`INSERT INTO ${this.table} (user_id,name,email,role,password) values ($1,$2,$3,$4,$5) RETURNING *`;
+        const {columns,placeholders,values}=multipleColumncommon(params)
+        const q=`INSERT INTO ${this.table} (${columns}) values (${placeholders})  RETURNING *`;
         try{
-            const result=pool.query(q,[params.userId,params.name,params.email,params.role,params.password]);
+            const result=pool.query(q,values);
             return result;
         }
         catch(err){

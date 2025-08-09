@@ -185,11 +185,16 @@ class UserController{
     
     registerUser = async (req,res) => {
         this.checkValidation(req); // Now you can use validation here too
-        const {name,email,role,password,confirmPassword}=req.body;
-
+        const name=req.body.name;
+        const email=req.body.email;
+        const role=req.body.role;
+        const password=req.body.password;
+        const confirm_password=req.body.confirm_password;
+        // const {name,email,role,password,confirmPassword}=req.body;
+        
         try{
-            
-            const hashedPassword=await bcrypt.hash(password,10);
+            if(password===confirm_password){
+                 const hashedPassword=await bcrypt.hash(password,10);
             console.log(hashedPassword);
             const userId=uuidv4();
             const result1=await UserModel.findUserByEmail({email});
@@ -197,11 +202,15 @@ class UserController{
                 res.status(300).json({message:'The email already used'});
             }else{
 
-                const result=await UserModel.create({'userId':userId,'name':name,'email':email,'role':role,'password':hashedPassword});
+                const result=await UserModel.create({'user_id':userId,'name':name,'email':email,'role':role,'password':hashedPassword});
                 
                 res.status(201).json({message:'User registered successfully', user: result.rows});
                 console.log('in user controller');
             }
+            }else{
+                res.status(200).json({message:"confirm password doesnot"})
+            }
+           
         }
         catch(err){
             console.log(err);

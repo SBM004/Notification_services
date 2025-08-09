@@ -36,7 +36,7 @@ const auth = (...roles) => {
             const ownerAuthorized =
             (req.params.userId && req.params.userId === result.user_id) ||
             (req.params.email && req.params.email === result.email);
-            console.log(ownerAuthorized)
+    console.log(ownerAuthorized)
             console.log(normalizedRoles.includes(normalizedUserRole))
             console.log(normalizedUserRole === 'admin')
             const isAuthorized = ownerAuthorized || normalizedRoles.includes(normalizedUserRole) || normalizedUserRole === 'admin';
@@ -45,7 +45,7 @@ const auth = (...roles) => {
                 throw new HttpException(403,'Forbidden: You do not have access');
             }
             // if the user has permissions
-            req.currentUser = user;
+            req.currentUser = result;
             next();
 
         } catch (e) {

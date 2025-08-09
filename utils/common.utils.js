@@ -54,6 +54,30 @@ export const multipleColumnSetDetailed = (object) => {
     };
 };
 
+
+export const multipleColumncommon = (object) => {
+    if (typeof object !== 'object' || object === null) {
+        throw new Error('Invalid input: expected non-null object');
+    }
+
+    const keys = Object.keys(object);
+    
+    if (keys.length === 0) {
+        throw new Error('Object cannot be empty');
+    }
+
+    const values = Object.values(object);
+
+    // Create column names and placeholders for INSERT
+    const columns = keys.join(', ');
+    const placeholders = keys.map((_, index) => `$${index + 1}`).join(', ');
+
+    return {
+        columns,        // "name, email, role"
+        placeholders,   // "$1, $2, $3"
+        values         // ['John', 'john@example.com', 'admin']
+    };
+};
 // Example usage and expected output:
 /*
 Input: { name: 'John', email: 'john@example.com', age: 25 }

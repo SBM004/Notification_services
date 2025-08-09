@@ -24,8 +24,8 @@ export const EmailService = async ( payload ) => {
             from: process.env.FROM_EMAIL,
             to: payload.sent_to,
             subject:payload.type,
+            html:`<p>${payload.message}</p>`,
             text: payload.message,
-            //  html: '<h1>Hello World!</h1>'
             });
 
         console.log("Sending Email to:", info.rejected>0?'failed':'sent');
