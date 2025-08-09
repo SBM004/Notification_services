@@ -10,6 +10,7 @@ import dotenv from 'dotenv'
 import userRouter from './routes/user.routes.js';
 import Notificationtype_router from './routes/notification_type.routes.js';
 import SentRouter from './routes/sentnotification.routes.js';
+import NotificationRouter from './routes/notification.routes.js';
 const app=express();
 dotenv.config();
 app.use(cookieParser())
@@ -17,14 +18,30 @@ app.use(cookieParser())
 await initProducer();
 await startConsumer();
 const port=process.env.PORT;
-app.use(express.json());
+app.use(express.json({ 
+    strict: false,  // Less strict JSON parsing
+    limit: '10mb'
+}));
 
 app.use(cors());
+app.use((err, req, res, next) => {
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        console.error('Bad JSON:', err.message);
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid JSON format in request body',
+            error: 'Malformed JSON'
+        });
+    }
+    next(err);
+});
 app.use('/user',userRouter);
 app.use('/type',Notificationtype_router);
 app.use('/send',SentRouter)
 app.use('/webhook',webHookRouter)
+app.use('/notifications',NotificationRouter)
 app.use(errorMiddleware);
+
 //http://localhost:3001/user/login
 
 

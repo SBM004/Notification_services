@@ -144,6 +144,231 @@ class SentController{
         }
     }
 
+    // Add these methods to your SentController class
+
+// Get all notifications for a specific user (admin can access any user, users only their own)
+async getNotificationsByUserId(req, res) {
+    try {
+        const { user_id } = req.params;
+        const currentUser = req.currentUser;
+        
+        // Authorization check
+        if (currentUser.role !== 'admin' && currentUser.user_id !== user_id) {
+            throw new HttpException(403, "Access denied. You can only view your own notifications");
+        }
+        
+        const result = await SentNotific.findByUserId({ user_id });
+        
+        res.status(200).json({
+            message: "Notifications retrieved successfully",
+            success: true,
+            count: result.length,
+            data: result
+        });
+        
+    } catch (err) {
+        console.error("Error getting notifications:", err);
+        res.status(err.status || 500).json({
+            message: err.message || "Internal server error",
+            success: false
+        });
+    }
+}
+
+// Get notifications by date range for specific user
+async getNotificationsByDateRange(req, res) {
+    try {
+        const { user_id } = req.params;
+        const { start_date, end_date } = req.query;
+        const currentUser = req.currentUser;
+        
+        // Authorization check
+        if (currentUser.role !== 'admin' && currentUser.user_id !== user_id) {
+            throw new HttpException(403, "Access denied. You can only view your own notifications");
+        }
+        
+        if (!start_date || !end_date) {
+            throw new HttpException(400, "start_date and end_date are required");
+        }
+        
+        const result = await SentNotific.findByDateRange({ 
+            user_id, 
+            start_date, 
+            end_date 
+        });
+        
+        res.status(200).json({
+            message: "Notifications retrieved successfully",
+            success: true,
+            count: result.length,
+            data: result
+        });
+        
+    } catch (err) {
+        console.error("Error getting notifications by date range:", err);
+        res.status(err.status || 500).json({
+            message: err.message || "Internal server error",
+            success: false
+        });
+    }
+}
+
+// Get notifications by specific date for specific user
+async getNotificationsByDate(req, res) {
+    try {
+        const { user_id } = req.params;
+        const { date } = req.query;
+        const currentUser = req.currentUser;
+        
+        // Authorization check
+        if (currentUser.role !== 'admin' && currentUser.user_id !== user_id) {
+            throw new HttpException(403, "Access denied. You can only view your own notifications");
+        }
+        
+        if (!date) {
+            throw new HttpException(400, "date parameter is required (format: YYYY-MM-DD)");
+        }
+        
+        const result = await SentNotific.findByDate({ user_id, date });
+        
+        res.status(200).json({
+            message: "Notifications retrieved successfully",
+            success: true,
+            count: result.length,
+            data: result
+        });
+        
+    } catch (err) {
+        console.error("Error getting notifications by date:", err);
+        res.status(err.status || 500).json({
+            message: err.message || "Internal server error",
+            success: false
+        });
+    }
+}
+
+// Get notifications by time range for specific user
+async getNotificationsByTimeRange(req, res) {
+    try {
+        const { user_id } = req.params;
+        const { start_time, end_time, date } = req.query;
+        const currentUser = req.currentUser;
+        
+        // Authorization check
+        if (currentUser.role !== 'admin' && currentUser.user_id !== user_id) {
+            throw new HttpException(403, "Access denied. You can only view your own notifications");
+        }
+        
+        if (!start_time || !end_time) {
+            throw new HttpException(400, "start_time and end_time are required (format: HH:MM)");
+        }
+        
+        // Use provided date or default to today
+        const targetDate = date || new Date().toISOString().split('T')[0];
+        
+        const result = await SentNotific.findByTimeRange({ 
+            user_id, 
+            date: targetDate, 
+            start_time, 
+            end_time 
+        });
+        
+        res.status(200).json({
+            message: "Notifications retrieved successfully",
+            success: true,
+            count: result.length,
+            data: result
+        });
+        
+    } catch (err) {
+        console.error("Error getting notifications by time range:", err);
+        res.status(err.status || 500).json({
+            message: err.message || "Internal server error",
+            success: false
+        });
+    }
+}
+
+// Get recent notifications for specific user
+async getRecentNotifications(req, res) {
+    try {
+        const { user_id } = req.params;
+        const { hours, days } = req.query;
+        const currentUser = req.currentUser;
+        
+        // Authorization check
+        if (currentUser.role !== 'admin' && currentUser.user_id !== user_id) {
+            throw new HttpException(403, "Access denied. You can only view your own notifications");
+        }
+        
+        if (!hours && !days) {
+            throw new HttpException(400, "Either 'hours' or 'days' parameter is required");
+        }
+        
+        const result = await SentNotific.findRecent({ 
+            user_id, 
+            hours: hours ? parseInt(hours) : null,
+            days: days ? parseInt(days) : null
+        });
+        
+        res.status(200).json({
+            message: "Recent notifications retrieved successfully",
+            success: true,
+            count: result.length,
+            data: result
+        });
+        
+    } catch (err) {
+        console.error("Error getting recent notifications:", err);
+        res.status(err.status || 500).json({
+            message: err.message || "Internal server error",
+            success: false
+        });
+    }
+}
+
+// Admin: Get all notifications across all users with optional filters
+async getAllNotifications(req, res) {
+    try {
+        const currentUser = req.currentUser;
+        
+        // Only admins can see all notifications
+        if (currentUser.role !== 'admin') {
+            throw new HttpException(403, "Access denied. Admin privileges required");
+        }
+        
+        const { 
+            carrier, 
+            delivery_status, 
+            date, 
+            limit = 50, 
+            offset = 0 
+        } = req.query;
+        
+        const result = await SentNotific.findAllWithFilters({
+            carrier,
+            delivery_status,
+            date,
+            limit: parseInt(limit),
+            offset: parseInt(offset)
+        });
+        
+        res.status(200).json({
+            message: "All notifications retrieved successfully",
+            success: true,
+            count: result.length,
+            data: result
+        });
+        
+    } catch (err) {
+        console.error("Error getting all notifications:", err);
+        res.status(err.status || 500).json({
+            message: err.message || "Internal server error",
+            success: false
+        });
+    }
+}
+
 
 
     // ... rest of your methods

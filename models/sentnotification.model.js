@@ -132,6 +132,251 @@ class SentNotificationModel{
             throw err;
         }
     }
+
+
+    // Add these methods to your SentNotificationModel class
+
+// Complete the findByDate method that was incomplete in your original model
+async findByDate(params) {
+    const q = `SELECT * FROM ${this.table} 
+               WHERE user_id = $1 
+               AND DATE(sent_at) = $2::date
+               ORDER BY sent_at DESC`;
+    try {
+        const result = await pool.query(q, [params.user_id, params.date]);
+        return result.rows;
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+
+// Admin method: Get all notifications with optional filters
+async findAllWithFilters(params) {
+    let q = `SELECT * FROM ${this.table} WHERE 1=1`;
+    const queryParams = [];
+    let paramCount = 0;
+    
+    // Build dynamic query based on provided filters
+    if (params.carrier) {
+        paramCount++;
+        q += ` AND carrier = ${paramCount}`;
+        queryParams.push(params.carrier);
+    }
+    
+    if (params.delivery_status) {
+        paramCount++;
+        q += ` AND delivery_status = ${paramCount}`;
+        queryParams.push(params.delivery_status);
+    }
+    
+    if (params.date) {
+        paramCount++;
+        q += ` AND DATE(sent_at) = ${paramCount}::date`;
+        queryParams.push(params.date);
+    }
+    
+    q += ` ORDER BY sent_at DESC`;
+    
+    // Add pagination
+    if (params.limit) {
+        paramCount++;
+        q += ` LIMIT ${paramCount}`;
+        queryParams.push(params.limit);
+    }
+    
+    if (params.offset) {
+        paramCount++;
+        q += ` OFFSET ${paramCount}`;
+        queryParams.push(params.offset);
+    }
+    
+    try {
+        const result = await pool.query(q, queryParams);
+        return result.rows;
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+
+// ADMIN MODEL METHODS - No user_id filtering
+
+// Admin: Get all notifications (no user filtering)
+async findAll() {
+    const q = `SELECT * FROM ${this.table} ORDER BY sent_at DESC`;
+    try {
+        const result = await pool.query(q);
+        return result.rows;
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+
+// Admin: Find notifications by date range (all users or specific user)
+async adminFindByDateRange(params) {
+    let q, queryParams;
+    
+    if (params.user_id) {
+        // Filter by specific user
+        q = `SELECT * FROM ${this.table} 
+             WHERE user_id = $1 
+             AND sent_at >= $2::date 
+             AND sent_at < $3::date + INTERVAL '1 day'
+             ORDER BY sent_at DESC`;
+        queryParams = [params.user_id, params.start_date, params.end_date];
+    } else {
+        // All users
+        q = `SELECT * FROM ${this.table} 
+             WHERE sent_at >= $1::date 
+             AND sent_at < $2::date + INTERVAL '1 day'
+             ORDER BY sent_at DESC`;
+        queryParams = [params.start_date, params.end_date];
+    }
+    
+    try {
+        const result = await pool.query(q, queryParams);
+        return result.rows;
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+
+// Admin: Find notifications with multiple filters
+async adminFindWithFilters(params) {
+    let q = `SELECT * FROM ${this.table} WHERE 1=1`;
+    const queryParams = [];
+    let paramCount = 0;
+    
+    // Build dynamic query based on provided filters
+    if (params.user_id) {
+        paramCount++;
+        q += ` AND user_id = ${paramCount}`;
+        queryParams.push(params.user_id);
+    }
+    
+    if (params.carrier) {
+        paramCount++;
+        q += ` AND carrier = ${paramCount}`;
+        queryParams.push(params.carrier);
+    }
+    
+    if (params.delivery_status) {
+        paramCount++;
+        q += ` AND delivery_status = ${paramCount}`;
+        queryParams.push(params.delivery_status);
+    }
+    
+    if (params.date) {
+        paramCount++;
+        q += ` AND DATE(sent_at) = ${paramCount}::date`;
+        queryParams.push(params.date);
+    }
+    
+    q += ` ORDER BY sent_at DESC`;
+    
+    // Add pagination
+    if (params.limit) {
+        paramCount++;
+        q += ` LIMIT ${paramCount}`;
+        queryParams.push(params.limit);
+    }
+    
+    if (params.offset) {
+        paramCount++;
+        q += ` OFFSET ${paramCount}`;
+        queryParams.push(params.offset);
+    }
+    
+    try {
+        const result = await pool.query(q, queryParams);
+        return result.rows;
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+
+// Find notifications by date range
+async findByDateRange(params) {
+    const q = `SELECT * FROM ${this.table} 
+               WHERE user_id = $1 
+               AND sent_at >= $2::date 
+               AND sent_at < $3::date + INTERVAL '1 day'
+               ORDER BY sent_at DESC`;
+    try {
+        const result = await pool.query(q, [params.user_id, params.start_date, params.end_date]);
+        return result.rows;
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+
+// Find notifications by specific date
+async findByDate(params) {
+    const q = `SELECT * FROM ${this.table} 
+               WHERE user_id = $1 
+               AND DATE(sent_at) = $2::date
+               ORDER BY sent_at DESC`;
+    try {
+        const result = await pool.query(q, [params.user_id, params.date]);
+        return result.rows;
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+
+// Find notifications by time range on a specific date
+async findByTimeRange(params) {
+    const q = `SELECT * FROM ${this.table} 
+               WHERE user_id = $1 
+               AND DATE(sent_at) = $2::date
+               AND TIME(sent_at) BETWEEN $3::time AND $4::time
+               ORDER BY sent_at DESC`;
+    try {
+        const result = await pool.query(q, [
+            params.user_id, 
+            params.date, 
+            params.start_time, 
+            params.end_time
+        ]);
+        return result.rows;
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+
+// Find recent notifications (last N hours or days)
+async findRecent(params) {
+    let q, queryParams;
+    
+    if (params.hours) {
+        q = `SELECT * FROM ${this.table} 
+             WHERE user_id = $1 
+             AND sent_at >= NOW() - INTERVAL '${params.hours} hours'
+             ORDER BY sent_at DESC`;
+        queryParams = [params.user_id];
+    } else if (params.days) {
+        q = `SELECT * FROM ${this.table} 
+             WHERE user_id = $1 
+             AND sent_at >= NOW() - INTERVAL '${params.days} days'
+             ORDER BY sent_at DESC`;
+        queryParams = [params.user_id];
+    }
+    
+    try {
+        const result = await pool.query(q, queryParams);
+        return result.rows;
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
     
 }
 

@@ -1,23 +1,50 @@
 // Middleware to validate carrier and destination
 function validateCarrierAndDestination(req, res, next) {
-  const { carrier, to } = req.body;
+  const carrier = req.body.carrier;
+  const to = req.body.to;
   
   try {
     if (carrier === 'email') {
       // Validate that 'to' is a valid email
-      if (!isValidEmail(to)) {
+      if(Array.isArray(to)){
+        console.log("in loop")
+        for(const msg of to){
+               if (!isValidEmail(msg.trim())) {
+                return res.status(400).json({
+                error: 'Invalid email format for email carrier'
+              });
+            }     
+        }
+      }else{
+          if (!isValidEmail(to)) {
         return res.status(400).json({
           error: 'Invalid email format for email carrier'
         });
       }
+      }
+      
     } 
     else if (carrier === 'sms' || carrier === 'phone') {
       // Validate that 'to' is a valid phone number
-      if (!isValidPhoneNumber(to)) {
+      if(Array.isArray(to)){
+        for(const msg of to){
+              if (!isValidPhoneNumber(msg)) {
         return res.status(400).json({
           error: 'Invalid phone number format for SMS carrier'
         });
       }
+      }     
+        }
+      else{
+          if (!isValidPhoneNumber(to)) {
+        return res.status(400).json({
+          error: 'Invalid phone number format for SMS carrier'
+        });
+      }
+      }
+      
+      
+     
     }
     else {
       return res.status(400).json({

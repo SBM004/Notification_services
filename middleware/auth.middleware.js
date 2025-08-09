@@ -34,7 +34,7 @@ const auth = (...roles) => {
             // check if the current user is the owner user
             // const ownerAuthorized = req.params.userId && req.params.userId === user.user_id;
             const ownerAuthorized =
-            (req.params.userId && req.params.userId === result.user_id) ||
+            (req.params.user_id && req.params.user_id === result.user_id) ||
             (req.params.email && req.params.email === result.email);
     console.log(ownerAuthorized)
             console.log(normalizedRoles.includes(normalizedUserRole))
