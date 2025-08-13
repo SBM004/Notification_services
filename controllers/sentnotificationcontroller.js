@@ -36,7 +36,8 @@ class SentController{
                         carrier,
                         user_id: req.currentUser.user_id,
                         sent_at: new Date().toISOString(),
-                        sid: sid
+                        sid: sid,
+                        
                     };
                     
                     try {

@@ -19,9 +19,10 @@ export const EmailService = async ( payload ) => {
         if (!process.env.FROM_EMAIL) {
             throw new HttpException(500, "Missing FROM_EMAIL configuration");
         }
-
+            //
+            console.log("email service")
          const info = await transporter.sendMail({
-            from: process.env.FROM_EMAIL,
+            from: process.env.FROM_EMAIL,//we can use payload.from for email or number 
             to: payload.sent_to,
             subject:payload.type,
             html:`<p>${payload.message}</p>`,

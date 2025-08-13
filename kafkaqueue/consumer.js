@@ -226,7 +226,7 @@ import SentNotific from '../models/sentnotification.model.js';
 import NotificationTypeModel from '../models/notification_type.model.js';
 import { v4 as uuidv4 } from 'uuid';
 import {EmailService} from '../services/email.service.js'
-
+import UserModel from '../models/user.model.js';
 const kafka = new Kafka({
     clientId: 'notification-app',
     brokers: [process.env.KAFKA_BROKER]
@@ -442,6 +442,8 @@ async function processCriticalNotification(payload) {
     
     try {
         if (payload.carrier === 'sms') {
+            const u=await UserModel. findUserById({user_id:payload.user_id});
+            payload.from=u.phone_number;
             const twilioSid = await withTimeout(
                 SMSservice({ payload }), 
                 10000, 
@@ -454,6 +456,8 @@ async function processCriticalNotification(payload) {
             );
             console.log(`CRITICAL SMS sent: ${payload.sid}`);
         } else {
+            const u=await UserModel. findUserById({user_id:payload.user_id});
+            payload.from=u.email;
             const info = await withTimeout(
                 EmailService(payload), 
                 15000, 
@@ -488,9 +492,13 @@ async function processHighPriorityNotification(payload) {
     
     try {
         if (payload.carrier === 'sms') {
+            const u=await UserModel. findUserById({user_id:payload.user_id});
+            payload.from=u.phone_number;
             const twilioSid = await withTimeout(SMSservice({ payload }), 10000, "SMS service");
             await withTimeout(updateNotificationStatus(payload.sid, 'sent', twilioSid), 5000, "Database update");
         } else {
+            const u=await UserModel. findUserById({user_id:payload.user_id});
+            payload.from=u.email;
             const info = await withTimeout(EmailService(payload), 15000, "Email service");
             await withTimeout(updateNotificationStatus(payload.sid, 'sent', info.messageId), 5000, "Database update");
         }
@@ -506,9 +514,13 @@ async function processNormalNotification(payload) {
     
     try {
         if (payload.carrier === 'sms') {
+            const u=await UserModel. findUserById({user_id:payload.user_id});
+            payload.from=u.phone_number;
             const twilioSid = await withTimeout(SMSservice({ payload }), 10000, "SMS service");
             await withTimeout(updateNotificationStatus(payload.sid, 'sent', twilioSid), 5000, "Database update");
         } else {
+            const u=await UserModel. findUserById({user_id:payload.user_id});
+            payload.from=u.email;
             const info = await withTimeout(EmailService(payload), 15000, "Email service");
             await withTimeout(updateNotificationStatus(payload.sid, 'sent', info.messageId), 5000, "Database update");
         }
@@ -524,9 +536,13 @@ async function processLowPriorityNotification(payload) {
     
     try {
         if (payload.carrier === 'sms') {
+            const u=await UserModel. findUserById({user_id:payload.user_id});
+            payload.from=u.phone_number;
             const twilioSid = await withTimeout(SMSservice({ payload }), 10000, "SMS service");
             await withTimeout(updateNotificationStatus(payload.sid, 'sent', twilioSid), 5000, "Database update");
         } else {
+            const u=await UserModel. findUserById({user_id:payload.user_id});
+            payload.from=u.email;
             const info = await withTimeout(EmailService(payload), 15000, "Email service");
             await withTimeout(updateNotificationStatus(payload.sid, 'sent', info.messageId), 5000, "Database update");
         }
@@ -630,3 +646,437 @@ process.on('SIGINT', async () => {
     }
     process.exit(0);
 });
+
+
+
+
+
+// import { Kafka } from 'kafkajs';
+// import dotenv from 'dotenv';
+// dotenv.config();
+
+// import {SMSservice} from '../services/sms.service.js'
+// import NotificationModel from '../models/notification.models.js';
+// import SentNotific from '../models/sentnotification.model.js';
+// import NotificationTypeModel from '../models/notification_type.model.js';
+// import { v4 as uuidv4 } from 'uuid';
+// import {EmailService} from '../services/email.service.js'
+// import UserModel from '../models/user.model.js';
+
+// const kafka = new Kafka({
+//     clientId: 'notification-app',
+//     brokers: [process.env.KAFKA_BROKER],
+//     // Global Kafka optimizations
+//     connectionTimeout: 3000,
+//     requestTimeout: 25000,
+//     retry: {
+//         initialRetryTime: 100,
+//         retries: 8
+//     }
+// });
+
+// // Optimized consumer configurations for different priorities
+// const consumers = {
+//     // ERROR consumers - Ultra fast processing (4 instances)
+//     error: createConsumerPool('error-processors', 4, {
+//         sessionTimeout: 10000,
+//         heartbeatInterval: 1000,
+//         maxWaitTimeInMs: 100,        // Poll every 100ms - FASTEST
+//         maxBytesPerPartition: 1024 * 512,  // Smaller batches for speed
+//         maxBytes: 1024 * 1024 * 5,   // 5MB max
+//         allowAutoTopicCreation: false,
+//         partitionAssignmentStrategy: ['RoundRobinAssigner'], // Better distribution
+//         retry: {
+//             initialRetryTime: 50,
+//             retries: 3
+//         }
+//     }),
+    
+//     // WARNING consumers - Fast processing (3 instances)
+//     warning: createConsumerPool('warning-processors', 3, {
+//         sessionTimeout: 12000,
+//         heartbeatInterval: 1500,
+//         maxWaitTimeInMs: 200,        // Poll every 200ms - FAST
+//         maxBytesPerPartition: 1024 * 1024,
+//         maxBytes: 1024 * 1024 * 8,   // 8MB max
+//         allowAutoTopicCreation: false,
+//         partitionAssignmentStrategy: ['RoundRobinAssigner'],
+//         retry: {
+//             initialRetryTime: 100,
+//             retries: 3
+//         }
+//     }),
+    
+//     // INFO consumers - Normal processing (2 instances) - FIXED CONFIG
+//     info: createConsumerPool('info-processors', 2, {
+//         sessionTimeout: 15000,
+//         heartbeatInterval: 2000,
+//         maxWaitTimeInMs: 500,        // FIXED: Was 1000ms, now 500ms
+//         maxBytesPerPartition: 1024 * 1024 * 2,
+//         maxBytes: 1024 * 1024 * 10,  // 10MB max
+//         allowAutoTopicCreation: false,
+//         partitionAssignmentStrategy: ['RoundRobinAssigner'],
+//         retry: {
+//             initialRetryTime: 100,
+//             retries: 5
+//         }
+//     }),
+    
+//     // REMINDER consumers - Batch processing (2 instances) - FIXED CONFIG
+//     reminder: createConsumerPool('reminder-processors', 2, {  // INCREASED from 1 to 2
+//         sessionTimeout: 20000,       // REDUCED from 30000
+//         heartbeatInterval: 3000,     // REDUCED from 5000
+//         maxWaitTimeInMs: 1000,       // REDUCED from 5000ms to 1000ms
+//         maxBytesPerPartition: 1024 * 1024 * 3,  // REDUCED batch size
+//         maxBytes: 1024 * 1024 * 15,  // 15MB max
+//         allowAutoTopicCreation: false,
+//         partitionAssignmentStrategy: ['RoundRobinAssigner'],
+//         retry: {
+//             initialRetryTime: 100,
+//             retries: 5
+//         }
+//     })
+// };
+
+// // Helper function to create consumer pool with optimized settings
+// function createConsumerPool(groupId, count, config) {
+//     const pool = [];
+//     for (let i = 0; i < count; i++) {
+//         pool.push(kafka.consumer({
+//             groupId: `${groupId}`,
+//             consumerId: `${groupId}-${i}-${Date.now()}`, // Unique consumer ID
+//             ...config
+//         }));
+//     }
+//     return pool;
+// }
+
+// // Topic mapping
+// const PRIORITY_TOPICS = {
+//     error: 'notifications-error',
+//     warning: 'notifications-warning',
+//     info: 'notifications-info', 
+//     reminder: 'notifications-reminder'
+// };
+
+// // Start all consumer groups with parallel initialization
+// export const startConsumer = async () => {
+//     console.log('🚀 Starting all priority-based consumers...');
+    
+//     // Start all consumers in parallel for faster startup
+//     const consumerPromises = [
+//         startConsumerGroup('error', consumers.error, PRIORITY_TOPICS.error),
+//         startConsumerGroup('warning', consumers.warning, PRIORITY_TOPICS.warning),
+//         startConsumerGroup('info', consumers.info, PRIORITY_TOPICS.info),
+//         startConsumerGroup('reminder', consumers.reminder, PRIORITY_TOPICS.reminder)
+//     ];
+    
+//     await Promise.all(consumerPromises);
+    
+//     console.log('✅ All priority-based consumers started successfully');
+    
+//     // Log consumer status
+//     logConsumerStatus();
+// };
+
+// // Enhanced consumer group startup with better error handling
+// async function startConsumerGroup(priority, consumerPool, topic) {
+//     const consumerPromises = consumerPool.map(async (consumer, index) => {
+//         try {
+//             await consumer.connect();
+//             console.log(`🔌 ${priority.toUpperCase()} Consumer-${index} connected`);
+            
+//             await consumer.subscribe({ 
+//                 topic: topic, 
+//                 fromBeginning: false 
+//             });
+//             console.log(`📡 ${priority.toUpperCase()} Consumer-${index} subscribed to ${topic}`);
+            
+//             await consumer.run({
+//                 // Process multiple messages concurrently per consumer
+//                 partitionsConsumedConcurrently: 2, // NEW: Process 2 partitions at once
+//                 eachBatchAutoResolve: true,        // NEW: Auto-resolve batches
+//                 eachMessage: async ({ topic, partition, message }) => {
+//                     const startTime = Date.now();
+//                     let payload = null;
+                    
+//                     try {
+//                         payload = JSON.parse(message.value.toString());
+//                         console.log(`⚡ ${priority.toUpperCase()}-${index} processing: ${payload.sid}`);
+                        
+//                         // Process with priority-specific logic
+//                         await processNotificationWithPriority(payload, priority);
+                        
+//                         const processingTime = Date.now() - startTime;
+//                         console.log(`✅ ${priority.toUpperCase()}-${index} completed in ${processingTime}ms`);
+                        
+//                     } catch (err) {
+//                         const processingTime = Date.now() - startTime;
+//                         console.error(`❌ ${priority.toUpperCase()}-${index} error after ${processingTime}ms:`, err.message);
+//                         await handleProcessingError(payload, err, priority);
+//                     }
+//                 }
+//             });
+            
+//             console.log(`✅ ${priority.toUpperCase()} Consumer-${index} running`);
+            
+//         } catch (error) {
+//             console.error(`❌ Failed to start ${priority.toUpperCase()} Consumer-${index}:`, error);
+//             throw error;
+//         }
+//     });
+    
+//     await Promise.all(consumerPromises);
+//     console.log(`🎯 Started ${consumerPool.length} ${priority.toUpperCase()} consumers on ${topic}`);
+// }
+
+// // Enhanced processing with better timeout handling
+// async function processNotificationWithPriority(payload, priority) {
+//     if (!payload.sid) {
+//         console.error(`❌ Missing 'sid' in ${priority} payload`);
+//         return;
+//     }
+    
+//     const timeoutConfig = {
+//         error: { db: 3000, processing: 8000 },      // Ultra fast
+//         warning: { db: 4000, processing: 10000 },    // Fast
+//         info: { db: 5000, processing: 12000 },       // Normal
+//         reminder: { db: 6000, processing: 15000 }    // Batch
+//     };
+    
+//     const timeouts = timeoutConfig[priority];
+    
+//     try {
+//         const existingNotification = await withTimeout(
+//             SentNotific.findBySID({ sid: payload.sid }),
+//             timeouts.db,
+//             `${priority} database query`
+//         );
+        
+//         if (existingNotification && existingNotification.length > 0) {
+//             const status = existingNotification[0].status;
+            
+//             if (status === 'sent' || status === 'delivered') {
+//                 console.log(`⏭️  Skipping processed ${priority}: ${payload.sid}`);
+//                 return;
+//             }
+            
+//             if (status === 'failed' || status === 'queued') {
+//                 console.log(`🔄 Retrying ${priority}: ${payload.sid}`);
+//             }
+            
+//             await processNotificationByPriority(payload, priority, timeouts);
+//         } else {
+//             await createNotificationRecords(payload, priority, timeouts);
+//         }
+//     } catch (error) {
+//         console.error(`💥 Error in ${priority} processing for ${payload.sid}:`, error.message);
+        
+//         try {
+//             await withTimeout(
+//                 SentNotific.UpdateStatus({ sid: payload.sid, status: 'failed' }),
+//                 timeouts.db,
+//                 `${priority} database update failed status`
+//             );
+//         } catch (updateError) {
+//             console.error(`💥 Failed to update failed status for ${payload.sid}:`, updateError.message);
+//         }
+        
+//         throw error;
+//     }
+// }
+
+// // Unified processing function with priority-specific timeouts
+// async function processNotificationByPriority(payload, priority, timeouts) {
+//     try {
+//         console.log(`⚡ Processing ${priority.toUpperCase()}: ${payload.sid}`);
+        
+//         // Get user info with timeout
+//         const user = await withTimeout(
+//             UserModel.findUserById({user_id: payload.user_id}),
+//             timeouts.db,
+//             `${priority} user lookup`
+//         );
+        
+//         if (payload.carrier === 'sms') {
+//             payload.from = user.phone_number;
+//             const twilioSid = await withTimeout(
+//                 SMSservice({ payload }), 
+//                 timeouts.processing, 
+//                 `${priority} SMS service`
+//             );
+            
+//             await withTimeout(
+//                 updateNotificationStatus(payload.sid, 'sent', twilioSid),
+//                 timeouts.db,
+//                 `${priority} SMS status update`
+//             );
+            
+//             console.log(`📱 ${priority.toUpperCase()} SMS sent: ${payload.sid}`);
+//         } else {
+//             payload.from = user.email;
+//             const info = await withTimeout(
+//                 EmailService(payload), 
+//                 timeouts.processing, 
+//                 `${priority} Email service`
+//             );
+            
+//             await withTimeout(
+//                 updateNotificationStatus(payload.sid, 'sent', info.messageId),
+//                 timeouts.db,
+//                 `${priority} Email status update`
+//             );
+            
+//             console.log(`📧 ${priority.toUpperCase()} Email sent: ${payload.sid}`);
+//         }
+        
+//     } catch (messageError) {
+//         console.error(`💥 ${priority.toUpperCase()} processing failed for ${payload.sid}:`, messageError.message);
+        
+//         await withTimeout(
+//             SentNotific.UpdateStatus({ sid: payload.sid, status: 'failed' }),
+//             timeouts.db,
+//             `${priority} failed status update`
+//         );
+        
+//         throw messageError;
+//     }
+// }
+
+// // Enhanced timeout function with better error messages
+// async function withTimeout(promise, timeoutMs = 10000, operation = "operation") {
+//     const timeoutPromise = new Promise((_, reject) => {
+//         setTimeout(() => reject(new Error(`⏱️  ${operation} timeout after ${timeoutMs}ms`)), timeoutMs);
+//     });
+    
+//     return Promise.race([promise, timeoutPromise]);
+// }
+
+// async function updateNotificationStatus(sid, status, carriersid) {
+//     await SentNotific.UpdateStatusAndId({
+//         sid: sid,
+//         status: status,
+//         carriersid: carriersid,
+//         read_at: null
+//     });
+// }
+
+// async function createNotificationRecords(payload, priority, timeouts) {
+//     try {
+//         const typeRecord = await withTimeout(
+//             NotificationTypeModel.findByTypeCarrier({
+//                 type: payload.type,
+//                 carrier: payload.carrier
+//             }),
+//             timeouts.db,
+//             `${priority} type lookup`
+//         );
+        
+//         if (!typeRecord || typeRecord.length === 0) {
+//             throw new Error(`Notification type not found: ${payload.type}/${payload.carrier}`);
+//         }
+        
+//         const type_id = typeRecord[0]?.type_id;
+//         const notification_id = uuidv4();
+        
+//         await withTimeout(
+//             NotificationModel.create({
+//                 notification_id,
+//                 type_id,
+//                 message: payload.message,
+//                 title: payload.title,
+//             }),
+//             timeouts.db,
+//             `${priority} notification create`
+//         );
+        
+//         await withTimeout(
+//             SentNotific.create({
+//                 sid: payload.sid,
+//                 user_id: payload.user_id,
+//                 notification_id,
+//                 sent_at: payload.sent_at,
+//                 sent_to: payload.sent_to,
+//                 status: 'queued'
+//             }),
+//             timeouts.db,
+//             `${priority} sent notification create`
+//         );
+        
+//         console.log(`📝 ${priority.toUpperCase()} database records created for ${payload.sid}`);
+//         await processNotificationByPriority(payload, priority, timeouts);
+        
+//     } catch (createError) {
+//         if (createError.code === '23505' || createError.message.includes('duplicate key')) {
+//             console.log(`⚠️  ${priority.toUpperCase()} record already exists for ${payload.sid}`);
+//             return;
+//         }
+//         throw createError;
+//     }
+// }
+
+// async function handleProcessingError(payload, error, priority) {
+//     try {
+//         if (payload && payload.sid) {
+//             try {
+//                 await withTimeout(
+//                     SentNotific.UpdateStatus({
+//                         sid: payload.sid,
+//                         status: 'failed',
+//                     }),
+//                     5000,
+//                     `${priority} error status update`
+//                 );
+//                 console.log(`💾 Updated ${priority} notification ${payload.sid} to failed`);
+//             } catch (updateError) {
+//                 console.error(`💥 Error updating failed status for ${payload.sid}:`, updateError);
+//             }
+//         }
+        
+//         console.error(`📊 ${priority.toUpperCase()} Error details:`, {
+//             message: error.message,
+//             code: error.code,
+//             sid: payload?.sid,
+//             priority: priority,
+//             timestamp: new Date().toISOString()
+//         });
+        
+//     } catch (handlerError) {
+//         console.error(`💥 Error in ${priority} error handler:`, handlerError);
+//     }
+// }
+
+// function logConsumerStatus() {
+//     console.log('\n📈 CONSUMER STATUS:');
+//     console.log('==================');
+//     Object.entries(consumers).forEach(([priority, pool]) => {
+//         console.log(`${priority.toUpperCase()}: ${pool.length} consumers`);
+//     });
+//     console.log('==================\n');
+// }
+
+// // Graceful shutdown with better logging
+// process.on('SIGINT', async () => {
+//     console.log('🛑 Shutting down all priority consumers...');
+//     try {
+//         const shutdownPromises = [];
+        
+//         for (const [priority, consumerPool] of Object.entries(consumers)) {
+//             const poolShutdown = consumerPool.map(async (consumer, index) => {
+//                 try {
+//                     await consumer.disconnect();
+//                     console.log(`✅ ${priority.toUpperCase()}-${index} disconnected`);
+//                 } catch (error) {
+//                     console.error(`❌ Error disconnecting ${priority.toUpperCase()}-${index}:`, error);
+//                 }
+//             });
+//             shutdownPromises.push(...poolShutdown);
+//         }
+        
+//         await Promise.all(shutdownPromises);
+//         console.log('✅ All consumers disconnected successfully');
+//     } catch (error) {
+//         console.error('💥 Error during shutdown:', error);
+//     }
+//     process.exit(0);
+// });

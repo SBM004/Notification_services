@@ -73,7 +73,7 @@ class ReportController {
           await generateExcel(user_id, [{ report_date, total_sent, total_read, total_delivered }], filePath);
         }
 
-        const fileUrl = `${req.protocol}://${req.get('host')}/reports/${fileName}`;
+        const fileUrl = `${req.protocol}://${req.get('host')}/report/${fileName}`;
         generatedLinks.push({ user_id, link: fileUrl });
       }
 

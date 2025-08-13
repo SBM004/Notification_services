@@ -70,6 +70,7 @@ webhookRouter.post('/email-status', async (req, res) => {
         const timestamp=eventt.timestamp
         const smtp_id=eventt["smtp-id"]
         const reason=eventt.reason
+        console.log('SendGrid webhook event outer check: ', eventt);
         if(event==='delivered'||event==='bounces'){
 
             
@@ -98,7 +99,7 @@ webhookRouter.post('/email-status', async (req, res) => {
              console.warn(`Email notification not found for smtp_id: ${smtp_id}`);
            }
         }
-        else{
+        else if(event==='open'){
              console.log('SendGrid webhook event:', eventt);
      
            // Find using carrierSID or email or any custom arg you passed in message

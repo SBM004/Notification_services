@@ -11,6 +11,8 @@ import userRouter from './routes/user.routes.js';
 import Notificationtype_router from './routes/notification_type.routes.js';
 import SentRouter from './routes/sentnotification.routes.js';
 import NotificationRouter from './routes/notification.routes.js';
+import ReportRouter from './routes/report.routes.js';
+import ReminderRouter from './routes/reminder.routes.js';
 const app=express();
 dotenv.config();
 app.use(cookieParser())
@@ -40,6 +42,8 @@ app.use('/type',Notificationtype_router);
 app.use('/send',SentRouter)
 app.use('/webhook',webHookRouter)
 app.use('/notifications',NotificationRouter)
+app.use('/report',ReportRouter);
+app.use('/reminder',ReminderRouter);
 app.use(errorMiddleware);
 
 //http://localhost:3001/user/login
