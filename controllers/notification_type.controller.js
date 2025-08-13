@@ -52,9 +52,23 @@ class NotificationTypeController {
         // const {type,carrier}=req.body;
         // const type_id=uuidv4();
         try{
-            const result=await NotificationTypeModel.find();
-            console.log(result);
-            res.status(200).json({data:result});
+
+            const page =parseInt(req.query.page) || 1;
+            const limit =parseInt(req.query.limit) || 10;
+            const offset =(page-1)*limit;
+
+            const result=await NotificationTypeModel.findPaginated(limit,offset);
+
+            const totalCount=await NotificationTypeModel.countAll();
+            const totalPages=await Math.ceil(totalCount/limit);
+
+            res.status(200).json({
+                page,
+                limit,
+                total: totalCount,
+                totalPages,
+                data:result
+            });
 
         }
         catch(err){

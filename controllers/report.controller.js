@@ -14,22 +14,29 @@ class ReportController {
   // Generate reports for all users for a given month
   async generateMonthlyReports(req, res, next) {
     try {
-      const { month, type } = req.body;
+      const { month, type, page=1,limit=10 } = req.body;
 
       if (!month) return res.status(400).json({ message: 'Month is required' });
       if (!['pdf', 'excel'].includes(type)) {
         return res.status(400).json({ message: 'Invalid type. Use "pdf" or "excel".' });
       }
 
+      const offset=(page-1)*limit;
+
       const userResult = await db.query(`
         SELECT DISTINCT user_id FROM sent_notification
         WHERE sent_at >= $1::DATE AND sent_at < ($1::DATE + INTERVAL '1 month')
-      `, [month]);
+        ORDER BY user_id
+        LIMIT $2 OFFSET $3
+      `, [month, limit, offset]);
 
       const users = userResult.rows;
       if (users.length === 0) {
         return res.status(200).json({ message: `No notifications sent in month: ${month}` });
       }
+
+      const totalUsers = parseInt(totalCountResult.rows[0].total, 10);
+      const totalPages = Math.ceil(totalUsers / limit);
 
       const publicDir = path.join(process.cwd(), 'public', 'reports');
       if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
@@ -78,7 +85,13 @@ class ReportController {
       }
 
       return res.status(200).json({
-        message: `Monthly ${type.toUpperCase()} reports generated for ${month}`,
+        message: `Monthly ${type.toUpperCase()} reports generated for ${month} (Page ${page} of ${totalPages})`,
+        pagination: {
+          page: parseInt(page, 10),
+          limit: parseInt(limit, 10),
+          totalUsers,
+          totalPages
+        },
         reports: generatedLinks
       });
 
