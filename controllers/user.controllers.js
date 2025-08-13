@@ -220,7 +220,18 @@ class UserController{
     // Changed to arrow function
     find = async (req,res) => {
         try{
-            const result=await UserModel.find();
+
+            //Pagination params
+            const page= parseInt(req.query.page) || 1;
+            const limit= parseInt(req.query.limit) || 10;
+            const offset = (page-1)*limit;
+
+            //get paginated users
+            const result=await UserModel.findPaginated(limit,offset);
+            const totalCount =await UserModel.countAll();
+            const totalPages=Math.ceil(totalCount/limit);
+
+
             console.log(result);
             if(result.length >0){
                 
@@ -232,7 +243,13 @@ class UserController{
                         "role":item.role
                     })
                 })
-                return res.status(200).json({"userDetail":userDetail});
+                return res.status(200).json({
+                    page,
+                    limit,
+                    total: totalCount,
+                    totalPages,
+                    data:userDetail
+                });
             }
             else{
                  res.status(200).send({message:"no users registered"});
