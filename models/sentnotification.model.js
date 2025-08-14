@@ -16,7 +16,7 @@ class SentNotificationModel{
             throw err;
         }
     }
-    /* old function
+    //  old function
     async find(){
         const q = `SELECT * FROM ${this.table}`;
         try {
@@ -26,31 +26,31 @@ class SentNotificationModel{
             console.log(err);
             throw err;
         }
-    }*/
-
-    async find({ limit, offset } = {}) {
-        let q = `SELECT * FROM ${this.table} ORDER BY sent_at DESC`;
-        const params = [];
-
-        if (limit) {
-            params.push(limit);
-            q += ` LIMIT $${params.length}`;
-        }
-        if (offset) {
-            params.push(offset);
-            q += ` OFFSET $${params.length}`;
-        }
-
-        try {
-            const result = await pool.query(q, params);
-            return result.rows;
-        } catch (err) {
-            console.log(err);
-            throw err;
-        }
     }
 
-/* old function
+    // async find({ limit, offset } = {}) {
+    //     let q = `SELECT * FROM ${this.table} ORDER BY sent_at DESC`;
+    //     const params = [];
+
+    //     if (limit) {
+    //         params.push(limit);
+    //         q += ` LIMIT $${params.length}`;
+    //     }
+    //     if (offset) {
+    //         params.push(offset);
+    //         q += ` OFFSET $${params.length}`;
+    //     }
+
+    //     try {
+    //         const result = await pool.query(q, params);
+    //         return result.rows;
+    //     } catch (err) {
+    //         console.log(err);
+    //         throw err;
+    //     }
+    // }
+
+/* old function*/
     async findByUserId(params){
         const q=`SELECT * FROM ${this.table} WHERE user_id=$1`;
         try{
@@ -63,29 +63,29 @@ class SentNotificationModel{
             throw err;
         }
     }
-*/
 
-    async findByUserId({ user_id, limit, offset }) {
-        let q = `SELECT * FROM ${this.table} WHERE user_id = $1 ORDER BY sent_at DESC`;
-        const params = [user_id];
 
-        if (limit) {
-            params.push(limit);
-            q += ` LIMIT $${params.length}`;
-        }
-        if (offset) {
-            params.push(offset);
-            q += ` OFFSET $${params.length}`;
-        }
+    // async findByUserId({ user_id, limit, offset }) {
+    //     let q = `SELECT * FROM ${this.table} WHERE user_id = $1 ORDER BY sent_at DESC`;
+    //     const params = [user_id];
 
-        try {
-            const result = await pool.query(q, params);
-            return result.rows;
-        } catch (err) {
-            console.log(err);
-            throw err;
-        }
-    }
+    //     if (limit) {
+    //         params.push(limit);
+    //         q += ` LIMIT $${params.length}`;
+    //     }
+    //     if (offset) {
+    //         params.push(offset);
+    //         q += ` OFFSET $${params.length}`;
+    //     }
+
+    //     try {
+    //         const result = await pool.query(q, params);
+    //         return result.rows;
+    //     } catch (err) {
+    //         console.log(err);
+    //         throw err;
+    //     }
+    // }
 
 
     async findByCarrierSID(params){
@@ -181,7 +181,7 @@ class SentNotificationModel{
     // Add these methods to your SentNotificationModel class
 
 // Complete the findByDate method that was incomplete in your original model
-/* old function
+// old function
 async findByDate() {
     const q = `SELECT * FROM ${this.table} 
                WHERE user_id = $1 
@@ -194,37 +194,37 @@ async findByDate() {
         console.log(err);
         throw err;
     }
-*/
 
-async findByDate({user_id,date,limit,offset}) {
-    let q = `SELECT * FROM ${this.table} 
-               WHERE user_id = $1 
-               AND DATE(sent_at) = $2::date
-               ORDER BY sent_at DESC`;
-    
-    const params=[user_id,date];
-
-    if(limit){
-        params.push(limit);
-        q+=` LIMIT $${params.length}`;
-    }
-
-    if(offset){
-        params.push(offset);
-        q += ` OFFSET $${params.length}`;
-
-    }
-
-    try {
-        const result = await pool.query(q, params);
-        return result.rows;
-    } catch (err) {
-        console.log(err);
-        throw err;
-    }
 }
+// async findByDate({user_id,date,limit,offset}) {
+//     let q = `SELECT * FROM ${this.table} 
+//                WHERE user_id = $1 
+//                AND DATE(sent_at) = $2::date
+//                ORDER BY sent_at DESC`;
+    
+//     const params=[user_id,date];
 
-/*
+//     if(limit){
+//         params.push(limit);
+//         q+=` LIMIT $${params.length}`;
+//     }
+
+//     if(offset){
+//         params.push(offset);
+//         q += ` OFFSET $${params.length}`;
+
+//     }
+
+//     try {
+//         const result = await pool.query(q, params);
+//         return result.rows;
+//     } catch (err) {
+//         console.log(err);
+//         throw err;
+//     }
+// }
+
+
 // Admin method: Get all notifications with optional filters
 async findAllWithFilters(params) {
     let q = `SELECT * FROM ${this.table} WHERE 1=1`;
@@ -273,45 +273,44 @@ async findAllWithFilters(params) {
         throw err;
     }
 }
-    */
    
-// Admin method: Get all notifications with optional filters
- async findAllWithFilters({ carrier, delivery_status, date, limit, offset }) {
-        let q = `SELECT * FROM ${this.table} WHERE 1=1`;
-        const params = [];
+// // Admin method: Get all notifications with optional filters
+//  async findAllWithFilters({ carrier, delivery_status, date, limit, offset }) {
+//         let q = `SELECT * FROM ${this.table} WHERE 1=1`;
+//         const params = [];
 
-        if (carrier) {
-            params.push(carrier);
-            q += ` AND carrier = $${params.length}`;
-        }
-        if (delivery_status) {
-            params.push(delivery_status);
-            q += ` AND delivery_status = $${params.length}`;
-        }
-        if (date) {
-            params.push(date);
-            q += ` AND DATE(sent_at) = $${params.length}::date`;
-        }
+//         if (carrier) {
+//             params.push(carrier);
+//             q += ` AND carrier = $${params.length}`;
+//         }
+//         if (delivery_status) {
+//             params.push(delivery_status);
+//             q += ` AND delivery_status = $${params.length}`;
+//         }
+//         if (date) {
+//             params.push(date);
+//             q += ` AND DATE(sent_at) = $${params.length}::date`;
+//         }
 
-        q += ` ORDER BY sent_at DESC`;
+//         q += ` ORDER BY sent_at DESC`;
 
-        if (limit) {
-            params.push(limit);
-            q += ` LIMIT $${params.length}`;
-        }
-        if (offset) {
-            params.push(offset);
-            q += ` OFFSET $${params.length}`;
-        }
+//         if (limit) {
+//             params.push(limit);
+//             q += ` LIMIT $${params.length}`;
+//         }
+//         if (offset) {
+//             params.push(offset);
+//             q += ` OFFSET $${params.length}`;
+//         }
 
-        try {
-            const result = await pool.query(q, params);
-            return result.rows;
-        } catch (err) {
-            console.log(err);
-            throw err;
-        }
-    }
+//         try {
+//             const result = await pool.query(q, params);
+//             return result.rows;
+//         } catch (err) {
+//             console.log(err);
+//             throw err;
+//         }
+//     }
 
 // ADMIN MODEL METHODS - No user_id filtering
 
@@ -358,7 +357,7 @@ async adminFindByDateRange(params) {
 }
 
 // Admin: Find notifications with multiple filters
-/*async adminFindWithFilters(params) {
+async adminFindWithFilters(params) {
     let q = `SELECT * FROM ${this.table} WHERE 1=1`;
     const queryParams = [];
     let paramCount = 0;
@@ -411,141 +410,141 @@ async adminFindByDateRange(params) {
         throw err;
     }
 }
-*/
+
 
 // Admin: Find notifications with multiple filters
-async adminFindWithFilters({ user_id, carrier, delivery_status, date, limit, offset }) {
-        let q = `SELECT * FROM ${this.table} WHERE 1=1`;
-        const params = [];
+// async adminFindWithFilters({ user_id, carrier, delivery_status, date, limit, offset }) {
+//         let q = `SELECT * FROM ${this.table} WHERE 1=1`;
+//         const params = [];
 
-        if (user_id) {
-            params.push(user_id);
-            q += ` AND user_id = $${params.length}`;
-        }
-        if (carrier) {
-            params.push(carrier);
-            q += ` AND carrier = $${params.length}`;
-        }
-        if (delivery_status) {
-            params.push(delivery_status);
-            q += ` AND delivery_status = $${params.length}`;
-        }
-        if (date) {
-            params.push(date);
-            q += ` AND DATE(sent_at) = $${params.length}::date`;
-        }
+//         if (user_id) {
+//             params.push(user_id);
+//             q += ` AND user_id = $${params.length}`;
+//         }
+//         if (carrier) {
+//             params.push(carrier);
+//             q += ` AND carrier = $${params.length}`;
+//         }
+//         if (delivery_status) {
+//             params.push(delivery_status);
+//             q += ` AND delivery_status = $${params.length}`;
+//         }
+//         if (date) {
+//             params.push(date);
+//             q += ` AND DATE(sent_at) = $${params.length}::date`;
+//         }
 
-        q += ` ORDER BY sent_at DESC`;
+//         q += ` ORDER BY sent_at DESC`;
 
-        if (limit) {
-            params.push(limit);
-            q += ` LIMIT $${params.length}`;
-        }
-        if (offset) {
-            params.push(offset);
-            q += ` OFFSET $${params.length}`;
-        }
+//         if (limit) {
+//             params.push(limit);
+//             q += ` LIMIT $${params.length}`;
+//         }
+//         if (offset) {
+//             params.push(offset);
+//             q += ` OFFSET $${params.length}`;
+//         }
 
-        try {
-            const result = await pool.query(q, params);
-            return result.rows;
-        } catch (err) {
-            console.log(err);
-            throw err;
-        }
-    }
+//         try {
+//             const result = await pool.query(q, params);
+//             return result.rows;
+//         } catch (err) {
+//             console.log(err);
+//             throw err;
+//         }
+//     }
 
-    // Find notifications by date range
-    async findByDateRange({ user_id, start_date, end_date, limit, offset }) {
-        let q = `SELECT * FROM ${this.table} 
-                 WHERE user_id = $1 
-                 AND sent_at >= $2::date 
-                 AND sent_at < $3::date + INTERVAL '1 day'
-                 ORDER BY sent_at DESC`;
+//     // Find notifications by date range
+//     async findByDateRange({ user_id, start_date, end_date, limit, offset }) {
+//         let q = `SELECT * FROM ${this.table} 
+//                  WHERE user_id = $1 
+//                  AND sent_at >= $2::date 
+//                  AND sent_at < $3::date + INTERVAL '1 day'
+//                  ORDER BY sent_at DESC`;
 
-        const params = [user_id, start_date, end_date];
-        if (limit) {
-            params.push(limit);
-            q += ` LIMIT $${params.length}`;
-        }
-        if (offset) {
-            params.push(offset);
-            q += ` OFFSET $${params.length}`;
-        }
+//         const params = [user_id, start_date, end_date];
+//         if (limit) {
+//             params.push(limit);
+//             q += ` LIMIT $${params.length}`;
+//         }
+//         if (offset) {
+//             params.push(offset);
+//             q += ` OFFSET $${params.length}`;
+//         }
 
-        try {
-            const result = await pool.query(q, params);
-            return result.rows;
-        } catch (err) {
-            console.log(err);
-            throw err;
-        }
-    }
+//         try {
+//             const result = await pool.query(q, params);
+//             return result.rows;
+//         } catch (err) {
+//             console.log(err);
+//             throw err;
+//         }
+//     }
 
-        async findByTimeRange({ user_id, date, start_time, end_time, limit, offset }) {
-        let q = `SELECT * FROM ${this.table} 
-                 WHERE user_id = $1 
-                 AND DATE(sent_at) = $2::date
-                 AND TIME(sent_at) BETWEEN $3::time AND $4::time
-                 ORDER BY sent_at DESC`;
+//         async findByTimeRange({ user_id, date, start_time, end_time, limit, offset }) {
+//         let q = `SELECT * FROM ${this.table} 
+//                  WHERE user_id = $1 
+//                  AND DATE(sent_at) = $2::date
+//                  AND TIME(sent_at) BETWEEN $3::time AND $4::time
+//                  ORDER BY sent_at DESC`;
 
-        const params = [user_id, date, start_time, end_time];
-        if (limit) {
-            params.push(limit);
-            q += ` LIMIT $${params.length}`;
-        }
-        if (offset) {
-            params.push(offset);
-            q += ` OFFSET $${params.length}`;
-        }
+//         const params = [user_id, date, start_time, end_time];
+//         if (limit) {
+//             params.push(limit);
+//             q += ` LIMIT $${params.length}`;
+//         }
+//         if (offset) {
+//             params.push(offset);
+//             q += ` OFFSET $${params.length}`;
+//         }
 
-        try {
-            const result = await pool.query(q, params);
-            return result.rows;
-        } catch (err) {
-            console.log(err);
-            throw err;
-        }
-    }
+//         try {
+//             const result = await pool.query(q, params);
+//             return result.rows;
+//         } catch (err) {
+//             console.log(err);
+//             throw err;
+//         }
+//     }
 
-        async findRecent({ user_id, hours, days, limit, offset }) {
-        let q;
-        const params = [user_id];
+//         async findRecent({ user_id, hours, days, limit, offset }) {
+//         let q;
+//         const params = [user_id];
 
-        if (hours) {
-            q = `SELECT * FROM ${this.table} 
-                 WHERE user_id = $1 
-                 AND sent_at >= NOW() - INTERVAL '${hours} hours'`;
-        } else if (days) {
-            q = `SELECT * FROM ${this.table} 
-                 WHERE user_id = $1 
-                 AND sent_at >= NOW() - INTERVAL '${days} days'`;
-        } else {
-            q = `SELECT * FROM ${this.table} WHERE user_id = $1`;
-        }
+//         if (hours) {
+//             q = `SELECT * FROM ${this.table} 
+//                  WHERE user_id = $1 
+//                  AND sent_at >= NOW() - INTERVAL '${hours} hours'`;
+//         } else if (days) {
+//             q = `SELECT * FROM ${this.table} 
+//                  WHERE user_id = $1 
+//                  AND sent_at >= NOW() - INTERVAL '${days} days'`;
+//         } else {
+//             q = `SELECT * FROM ${this.table} WHERE user_id = $1`;
+//         }
 
-        q += ` ORDER BY sent_at DESC`;
+//         q += ` ORDER BY sent_at DESC`;
 
-        if (limit) {
-            params.push(limit);
-            q += ` LIMIT $${params.length}`;
-        }
-        if (offset) {
-            params.push(offset);
-            q += ` OFFSET $${params.length}`;
-        }
+//         if (limit) {
+//             params.push(limit);
+//             q += ` LIMIT $${params.length}`;
+//         }
+//         if (offset) {
+//             params.push(offset);
+//             q += ` OFFSET $${params.length}`;
+//         }
 
-        try {
-            const result = await pool.query(q, params);
-            return result.rows;
-        } catch (err) {
-            console.log(err);
-            throw err;
-        }
-    }
+//         try {
+//             const result = await pool.query(q, params);
+//             return result.rows;
+//         } catch (err) {
+//             console.log(err);
+//             throw err;
+//         }
+//     }
 
-/*
-old funtion
+
+// old funtion
 // Find notifications by date range
 async findByDateRange(params) {
     const q = `SELECT * FROM ${this.table} 
@@ -626,7 +625,6 @@ async findRecent(params) {
         throw err;
     }
 }
-    */
     
 }
 

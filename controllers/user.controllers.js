@@ -220,18 +220,7 @@ class UserController{
     // Changed to arrow function
     find = async (req,res) => {
         try{
-
-            //Pagination params
-            const page= parseInt(req.query.page) || 1;
-            const limit= parseInt(req.query.limit) || 10;
-            const offset = (page-1)*limit;
-
-            //get paginated users
-            const result=await UserModel.findPaginated(limit,offset);
-            const totalCount =await UserModel.countAll();
-            const totalPages=Math.ceil(totalCount/limit);
-
-
+            const result=await UserModel.find();
             console.log(result);
             if(result.length >0){
                 
@@ -244,11 +233,7 @@ class UserController{
                     })
                 })
                 return res.status(200).json({
-                    page,
-                    limit,
-                    total: totalCount,
-                    totalPages,
-                    data:userDetail
+                    "userDetail":userDetail
                 });
             }
             else{

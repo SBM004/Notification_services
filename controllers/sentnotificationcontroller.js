@@ -11,12 +11,7 @@ import {v4 as uuidv4} from 'uuid'
 class SentController{
     
     // Helper to extract pagination params
-    getPaginationParams(req) {
-        const page = parseInt(req.query.page, 10) || 1;
-        const limit = parseInt(req.query.limit, 10) || 20;
-        const offset = (page - 1) * limit;
-        return { limit, offset, page };
-    }
+ 
 
     async createSentNotification(req, res) {
     const body = req.body;
@@ -157,7 +152,7 @@ class SentController{
 async getNotificationsByUserId(req, res) {
     try {
         const { user_id } = req.params;
-        const {limit,offset,page}=this.getPaginationParams(req); //added for pagination
+      
         const currentUser = req.currentUser;
         
         // Authorization check
@@ -165,13 +160,11 @@ async getNotificationsByUserId(req, res) {
             throw new HttpException(403, "Access denied. You can only view your own notifications");
         }
         
-        const result = await SentNotific.findByUserId({ user_id, limit,offset }); //updated for pagination
+        const result = await SentNotific.findByUserId({ user_id}); 
         
         res.status(200).json({
             message: "Notifications retrieved successfully",
             success: true,
-            page,
-            limit,
             count: result.length,
             data: result
         });
@@ -190,7 +183,6 @@ async getNotificationsByDateRange(req, res) {
     try {
         const { user_id } = req.params;
         const { start_date, end_date } = req.query;
-        const {limit,offset,page}=this.getPaginationParams(req); //added for pagination
         const currentUser = req.currentUser;
         
         // Authorization check
@@ -202,19 +194,16 @@ async getNotificationsByDateRange(req, res) {
             throw new HttpException(400, "start_date and end_date are required");
         }
         
-        const result = await SentNotific.findByDateRange({ //updated for pagination
+        const result = await SentNotific.findByDateRange({ 
             user_id, 
             start_date, 
             end_date,
-            limit,
-            offset
+          
         });
         
         res.status(200).json({
             message: "Notifications retrieved successfully",
             success: true,
-            page,
-            limit,
             count: result.length,
             data: result
         });
@@ -233,7 +222,7 @@ async getNotificationsByDate(req, res) {
     try {
         const { user_id } = req.params;
         const { date } = req.query;
-        const { limit, offset, page } = this.getPaginationParams(req);
+       
         const currentUser = req.currentUser;
         
         // Authorization check
@@ -245,13 +234,11 @@ async getNotificationsByDate(req, res) {
             throw new HttpException(400, "date parameter is required (format: YYYY-MM-DD)");
         }
         
-        const result = await SentNotific.findByDate({ user_id, date, limit, offset });
+        const result = await SentNotific.findByDate({ user_id, date});
         
         res.status(200).json({
             message: "Notifications retrieved successfully",
             success: true,
-            page,
-            limit,
             count: result.length,
             data: result
         });
@@ -270,7 +257,7 @@ async getNotificationsByTimeRange(req, res) {
     try {
         const { user_id } = req.params;
         const { start_time, end_time, date } = req.query;
-        const { limit, offset, page } = this.getPaginationParams(req);
+        
         const currentUser = req.currentUser;
         
         // Authorization check
@@ -290,15 +277,11 @@ async getNotificationsByTimeRange(req, res) {
             date: targetDate, 
             start_time, 
             end_time, 
-            limit,
-            offset
         });
         
         res.status(200).json({
             message: "Notifications retrieved successfully",
             success: true,
-            page,
-            limit,
             count: result.length,
             data: result
         });
@@ -317,7 +300,6 @@ async getRecentNotifications(req, res) {
     try {
         const { user_id } = req.params;
         const { hours, days } = req.query;
-        const { limit, offset, page } = this.getPaginationParams(req);
         const currentUser = req.currentUser;
         
         // Authorization check
@@ -332,16 +314,12 @@ async getRecentNotifications(req, res) {
         const result = await SentNotific.findRecent({ 
             user_id, 
             hours: hours ? parseInt(hours) : null,
-            days: days ? parseInt(days) : null,
-            limit,
-            offset
+            days: days ? parseInt(days) : null
         });
         
         res.status(200).json({
             message: "Recent notifications retrieved successfully",
             success: true,
-            page,
-            limit,
             count: result.length,
             data: result
         });
@@ -368,24 +346,22 @@ async getAllNotifications(req, res) {
         const { 
             carrier, 
             delivery_status, 
-            date 
+            date ,
+            limit=50,
+            offset=0
         } = req.query;
         
-        const {limit,offset,page}=this.getPaginationParams(req); //added pagination
-
         const result = await SentNotific.findAllWithFilters({
             carrier,
             delivery_status,
             date,
-            limit,
-            offset
+            limit:parseInt(limit),
+            offset:parseInt(offset)
         });
         
         res.status(200).json({
             message: "All notifications retrieved successfully",
             success: true,
-            page,
-            limit,
             count: result.length,
             data: result
         });

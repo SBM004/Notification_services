@@ -37,30 +37,7 @@ class UserModel{
 
 
       // NEW: Find with pagination
-    async findPaginated(limit, offset) {
-        const q = `SELECT * FROM ${this.table} ORDER BY name ASC LIMIT $1 OFFSET $2`;
-        try {
-            const result = await pool.query(q, [limit, offset]);
-            return result.rows;
-        } catch (err) {
-            console.log(err);
-            throw err;
-        }
-    }
-
-    // NEW: Count all records
-    async countAll() {
-        const q = `SELECT COUNT(*) AS total FROM ${this.table}`;
-        try {
-            const result = await pool.query(q);
-            return parseInt(result.rows[0].total);
-        } catch (err) {
-            console.log(err);
-            throw err;
-        }
-    }
-
-    
+   
     // async updateByEmail(body,email)
     // {
     //     const {column,values}=multipleColumnSet(body)

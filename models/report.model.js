@@ -66,36 +66,6 @@ class ReminderReportModel {
     }
   }
 
-// Get paginated reports
-  async getPaginatedReports({ page = 1, limit = 10 }) {
-    const offset = (page - 1) * limit;
-    const q = `
-      SELECT *
-      FROM ${this.table}
-      ORDER BY report_date DESC
-      LIMIT $1 OFFSET $2
-    `;
-    try {
-      const result = await pool.query(q, [limit, offset]);
-      return result.rows;
-    } catch (err) {
-      console.error('Error fetching paginated reports:', err);
-      throw err;
-    }
-  }
-
-  // Get total count of reports (for pagination metadata)
-  async getTotalCount() {
-    const q = `SELECT COUNT(*) AS total FROM ${this.table}`;
-    try {
-      const result = await pool.query(q);
-      return parseInt(result.rows[0].total, 10);
-    } catch (err) {
-      console.error('Error counting reports:', err);
-      throw err;
-    }
-  }
-
 }
 
 export default new ReminderReportModel();
